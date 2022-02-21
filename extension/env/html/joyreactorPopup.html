@@ -6,9 +6,19 @@
         <meta charset="utf-8">
         
         <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1">
-        <style>body { background: #262626; }</style>
-        <link rel="stylesheet" type="text/css" href="../css/options.css" />
-        <link rel="stylesheet" type="text/css" href="../css/popup.css" />
+        <style>
+            body {
+                min-width: 400px;
+                height: auto; 
+            }
+            
+            .page-wrapper {
+                background: #262626;
+                border: 6px solid #fff;
+                min-height : 120px;
+            }
+        </style>
+        <link rel="stylesheet" type="text/css" href="../css/joyreactorPopup.css" />
     </head>
 
     <body class="popup-env">
@@ -26,7 +36,9 @@
         <!-- init -->
         
         <script src="../../lib/kellyTools.js"></script>
-        <script src="../../init/joyreactorPopup.js"></script>
+        <script src="../../lib/kellyLoc.js"></script>
+        <script src="../../lib/profiles/joyreactor.js"></script>
+        <script src="../init/joyreactorPopup.js"></script>
     </body>
 
 </html> 

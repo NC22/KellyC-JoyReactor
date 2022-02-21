@@ -1,21 +1,84 @@
-body, html {
-    height: auto; 
-}
+/* page wrapper style placed directly to html to prevent "flashing" bg color during load css */
 
-body {
-    box-sizing: border-box;
+body, html {
+    font-family: 'Open Sans',Sans-serif;
+    background: #fff;
+    color: #bfbfbf;
+    font-size: 14px; 
+    width : 100%;    
     margin: 0;
     padding: 0;
-    width: 400px;
-    border: 6px solid #fff;
 }
 
 * {
     box-sizing: border-box;
 }
 
-.popup-env .kelly-popup-additions-show::after {
-    display : none;
+a {
+    color: #efefef;
+    text-decoration: none;
+    display: inline-block;
+    line-height: normal;
+}
+
+button {
+    display: block;
+    height: 38px;
+    min-width: 80px;
+    background: #535353;
+    border: 0;
+    color: #afafaf;
+    /* font-weight: bold; */
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 16px;
+    position : relative;
+}
+
+button:hover {
+    background-color: #838383;
+    color: #fff;
+}
+
+#header {    
+    color : #fff;
+    position: relative;
+}
+
+.page-header {
+    padding-bottom: 4px;
+    padding-top: 10px;
+    background: #535353;
+    border-bottom: 1px solid #7e7e7e;
+    padding: 12px;
+    font-size: 16px;
+    height: auto; 
+    background-image: url(../../env/img/icon128x128.png);
+    background-repeat: no-repeat;
+    background-size: 39px;
+    padding-left: 56px;
+    background-position: 6px center;
+}
+
+.kelly-popup-options-btn {
+    background: #c40000;
+    color: #fff;
+}
+
+.kelly-copyright a {
+    background: 0;
+    color: #ff2e2e;
+    padding: 0;
+}
+
+.page-options {
+    padding-left: 0; 
+    max-width: unset;
+    padding: 14px;
+    padding-top: 18px;
 }
 
 .popup-env .kelly-popup-additions-show {

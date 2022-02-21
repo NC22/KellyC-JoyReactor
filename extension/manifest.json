@@ -20,33 +20,36 @@
             "lib/recorder/kellyPageWatchdog.js", 
             "lib/recorder/kellyLoadDocControll.js", 
             "lib/recorder/kellyDPage.js", 
-            "lib/recorder/filters/artstation.js", 
-            "lib/recorder/filters/deviantart.js", 
-            "lib/recorder/filters/ehentai.js", 
-            "lib/recorder/filters/instagram.js", 
-            "lib/recorder/filters/joyreactor.js", 
-            "lib/recorder/filters/kemonoparty.js", 
-            "lib/recorder/filters/pixiv.js", 
-            "lib/recorder/filters/twitter.js", 
-            "lib/recorder/filters/vk.js", 
-            "lib/recorder/filters/flickr.js", 
-            "lib/recorder/filters/pikabu.js", 
-            "lib/recorder/filters/yandex.js",
-            "lib/recorder/filters/_validators.js", 
-            "lib/profiles/default.js", 
-            "lib/profiles/recorder.js", 
-            "env/init/recorderFront.js", 
             "env/init/joyreactorFront.js" 
       ],
-      "all_frames": true,
       "matches": [ 
-        "http://*/*",
-        "https://*/*"
+            "*://joyreactor.cc/*", 
+            "*://*.joyreactor.cc/*", 
+            "*://reactor.cc/*", 
+            "*://*.reactor.cc/*", 
+            "*://joyreactor.com/*",
+            "*://*.joyreactor.com/*",
+            "*://jr-proxy.com/*",
+            "*://*.jr-proxy.com/*",
+            "*://jrproxy.com/*",
+            "*://*.jrproxy.com/*",
+            "*://cookreactor.com/*",
+            "*://*.cookreactor.com/*",
+            "*://pornreactor.cc/*",
+            "*://*.pornreactor.cc/*",
+            "*://thatpervert.com/*",
+            "*://*.thatpervert.com/*",
+            "*://fapreactor.com/*",
+            "*://*.fapreactor.com/*",
+            "*://safereactor.cc/*",
+            "*://*.safereactor.cc/*",
+            "*://reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion/*",
+            "*://*.reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion/*"
         ]
    } ],
    "manifest_version" : 2,
    "version": "1.2.1.7",
-   "name": "KellyC Image Downloader",
+   "name": "KellyC JoyReactor",
    "description": "__MSG_ext_description_recorder__",
    "icons": { 
         "32": "env/img/icon32x32.png",
@@ -68,17 +71,16 @@
         "lib/kellyTools.js", 
         "lib/kellyDispetcher.js", 
         "lib/profiles/joyreactor.unlock.d.js",     
-        "env/init/background.js", 
-        "lib/recorder/kellyEDRecorder.js"
+        "env/init/background.js"
     ],
     "persistent": true
    },  
    "options_ui": {
-    "page": "env/html/recorderDownloader.html?tab=modules",
+    "page": "env/html/joyreactorDownloader.html",
     "open_in_tab": true
    },
    "browser_action": {
-        "default_popup": "env/html/recorderPopup.html",
+        "default_popup": "env/html/joyreactorPopup.html",
         "default_icon": {
             "32": "env/img/icon32x32.png"
         }

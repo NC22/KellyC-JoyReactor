@@ -20,6 +20,8 @@ KellyJoyreactorDPage.init = function() {
     K_FAV.load('cfg', function(fav) {
         var resources = ['core', 'single'];
               
+        if (typeof fav.coptions.darkTheme == 'undefined') fav.coptions.darkTheme = true;
+        
         if (fav.coptions.darkTheme) {
             document.body.classList.add(KellyJoyreactorDPage.env.className + '-dark');
             resources.push('dark');
