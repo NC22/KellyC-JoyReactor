@@ -1,0 +1,51 @@
+body, html {
+    height: auto; 
+}
+
+body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    width: 400px;
+    border: 6px solid #fff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.popup-env .kelly-popup-additions-show::after {
+    display : none;
+}
+
+.popup-env .kelly-popup-additions-show {
+    text-align : center;
+    padding : 0;
+}
+
+.popup-env .page-header .kelly-popup-report {
+    display : none;
+}
+
+.popup-env .kelly-popup-options-btn {
+    margin-bottom: 6px;
+}
+
+.popup-env .kelly-copyright {
+    font-size: 12px;
+    display: block;
+}
+
+.popup-env .disclaimer {
+    font-size: 12px;
+    background: #545454;
+    display: block;
+    padding: 6px;
+}
+
+.popup-env .disclaimer a {
+    display: inline-block;
+    padding: 0;
+    background: transparent;
+    text-decoration: underline;
+}
