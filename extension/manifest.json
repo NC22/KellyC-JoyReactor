@@ -1,6 +1,7 @@
 {
    "content_scripts": [ {
-      "js": [ 
+      "run_at": "document_start",
+      "js": [
             "widget/kellyTooltip.js", 
             "widget/kellyTileGrid.js", 
             "widget/kellyImageView.js", 
@@ -47,7 +48,8 @@
             "*://*.reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion/*"
         ]
    } ],
-   "manifest_version" : 2,
+   "host_permissions": ["*://*/*"], 
+   "manifest_version" : 3,
    "version": "1.2.1.7",
    "name": "KellyC JoyReactor",
    "description": "__MSG_ext_description_recorder__",
@@ -60,34 +62,26 @@
    "permissions": [
         "downloads",
         "storage",
+        "declarativeNetRequest",
         "tabs",
-        "unlimitedStorage",
-        "webRequest",
-        "webRequestBlocking",
-        "<all_urls>"
-    ],
+        "unlimitedStorage"
+   ],
    "background": {
-    "scripts": [
-        "lib/kellyTools.js", 
-        "lib/kellyDispetcher.js", 
-        "lib/profiles/joyreactor.unlock.d.js",     
-        "env/init/background.js"
-    ],
-    "persistent": true
-   },  
+        "service_worker": "background.js"
+   },
    "options_ui": {
     "page": "env/html/joyreactorDownloader.html",
     "open_in_tab": true
    },
-   "browser_action": {
+   "action": {
         "default_popup": "env/html/joyreactorPopup.html",
         "default_icon": {
             "32": "env/img/icon32x32.png"
         }
    },
-   "web_accessible_resources": [
-        "env/css/*.css",
-        "env/html/*.html",
-        "env/dynamic/*.js"
-    ]
+   "web_accessible_resources":  [{
+      "resources": ["env/css/*.css", "env/html/*.html", "env/dynamic/*.js"],
+      "matches": ["<all_urls>"],
+      "extension_ids": []
+    }]
 }

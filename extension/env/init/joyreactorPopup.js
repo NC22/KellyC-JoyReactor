@@ -13,11 +13,6 @@ KellyCPopup.showPagePopup = function() {
         handler.page = document.getElementById('page');
         handler.title =  'KellyC JoyReactor v' + (KellyTools.getBrowser().runtime.getManifest ? KellyTools.getBrowser().runtime.getManifest().version : '');
         handler.titleHtml = '<span class="' + handler.baseClass + '-ext-name">' + handler.title + '</span><span class="kelly-copyright">created by <a href="' + env.extLinks.author + '" target="_blank">nradiowave</a></span>';
-        
-        handler.titleHtml += '<div class="' + handler.baseClass + '-report">\
-                                <a href="' + env.extLinks.github + '/issues" target="_blank">Сообщить о проблеме</a>\
-                                <a href="' + env.extLinks.pp + '" target="_blank">' + handler.getLoc('options_page_pp') + '</a>\
-                             </div>';
                 
     document.title = handler.title;        
     KellyTools.setHTMLData(document.getElementById('header'), handler.titleHtml); 
@@ -25,7 +20,7 @@ KellyCPopup.showPagePopup = function() {
     var html = '';
         html += '<div class="' + handler.baseClass + '-popup-go"><button class="' + handler.baseClass + '-options-btn tab-navigation" data-source="/env/html/joyreactorDownloader.html?tab=options">' + handler.getLoc('options') + '</button></div>';
         
-        html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="/env/html/joyreactorDownloader.html?tab=profiles">' + handler.getLoc('saved') + '</button>';
+        html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="/env/html/joyreactorDownloader.html">' + handler.getLoc('saved') + '</button>';
         html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="' + env.extLinks.github + '/issues">Сообщить о проблеме</button>';
         html += '<div class="disclaimer" data-source="' + KellyCPopup.reportIssue + '">----- BOTTOM ---- TEXT ----</button>';
                    

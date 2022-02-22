@@ -1,5 +1,6 @@
 {
    "content_scripts": [ {
+      "run_at": "document_start",
       "js": [
             "widget/kellyTooltip.js", 
             "widget/kellyTileGrid.js", 
@@ -80,7 +81,7 @@
    },
    "web_accessible_resources":  [{
       "resources": ["env/css/*.css", "env/html/*.html", "env/dynamic/*.js"],
-      "matches": [],
+      "matches": ["<all_urls>"],
       "extension_ids": []
     }]
 }
