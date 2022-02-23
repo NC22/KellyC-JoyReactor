@@ -43,6 +43,20 @@ button:hover {
     color: #fff;
 }
 
+button.support {
+    background-image: url(../../env/img/cup.png);
+    background-size: 32px;
+    background-repeat: no-repeat;
+    background-position-y: center;
+    background-position-x: 12px;
+    background-color: #56afdf;
+    color: #fff;
+}
+
+button.support:hover {
+    background-color : #7abde2;
+}
+
 #header {    
     color : #fff;
     position: relative;
@@ -56,29 +70,31 @@ button:hover {
     padding: 12px;
     font-size: 16px;
     height: auto; 
+    /*
     background-image: url(../../env/img/icon128x128_joyreactor.png);
     background-repeat: no-repeat;
     background-size: 39px;
     padding-left: 56px;
+    */
     background-position: 6px center;
 }
 
-.kelly-popup-options-btn {
+/*.kelly-popup-options-btn {
     background: #c40000;
     color: #fff;
-}
+}*/
 
 .kelly-copyright a {
     background: 0;
-    color: #ff2e2e;
+    color:  #81d3ff;
     padding: 0;
 }
 
 .page-options {
     padding-left: 0; 
     max-width: unset;
-    padding: 14px;
-    padding-top: 18px;
+    padding: 8px;
+    padding-top: 10px;
 }
 
 .popup-env .kelly-popup-additions-show {
@@ -97,9 +113,9 @@ button:hover {
 
 .popup-env .disclaimer {
     font-size: 12px;
-    background: #545454;
+    /*background: #545454;*/
     display: block;
-    padding: 6px;
+    padding-top: 6px;
 }
 
 .popup-env .disclaimer a {

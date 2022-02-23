@@ -26,7 +26,10 @@ function KellyProfileJoyreactor() {
         
         install_ff : 'ff',
         install_chrome : 'chrome',
-        install_edge : 'edge',
+        install_edge : 'edge', 
+        
+        support : 'https://ko-fi.com/nradiowave',
+        discord : 'https://discord.gg/YnuFCufWQB',
         
         author : 'https://nradiowave.catface.ru/',
     };

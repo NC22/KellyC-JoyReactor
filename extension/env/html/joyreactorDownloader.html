@@ -5,12 +5,15 @@
         <meta charset="utf-8">
         <meta name="google" content="notranslate">
         <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1">
-        <style>body {background-color: #222;}</style>
+        <style>body {background-color: #222;} #sandbox-env.loading #container {opacity : 0} #sandbox-env.loading .loading-text { display : block; } .loading-text {position : absolute; display : none; font-size: 16px; color : #fff;}</style>
     </head>
 
     <body class="jr-downloader">  
 
-        <div id="sandbox-env" style="opacity : 0;">
+        <div id="sandbox-env" class="loading">
+            <div class="loading-text">
+                Загружаю данные...<br>(если загрузка выполняется слишком долго, перезагрузите бразуер)
+            </div>
             <div id="container">
                 
                 <div id="submenu"></div>
@@ -26,7 +29,6 @@
 
         <script src="../../lib/kellyTools.js"></script>    
         <script src="../init/joyreactorDownloader.js"></script>
-        
     </body>
 
 </html> 

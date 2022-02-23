@@ -13,7 +13,8 @@ KellyJoyreactorDPage.init = function() {
         
         // K_FAV.getGlobal('image_events').saveImageProportions = function() { return; }            
         // K_FAV.aspectRatioAccurCheck = false; // копирайт портит проверку соотношения сторон, отключаем
-        document.getElementById('sandbox-env').removeAttribute('style');
+        
+        document.getElementById('sandbox-env').classList.remove('loading');
         if (!K_FAV.defaultNavigation()) K_FAV.showOptionsDialog(); 
     }
     

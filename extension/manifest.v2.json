@@ -83,7 +83,7 @@
    "browser_action": {
         "default_popup": "env/html/joyreactorPopup.html",
         "default_icon": {
-            "32": "env/img/icon32x32.png"
+            "32": "env/img/icon32x32_joyreactor.png"
         }
    },
    "web_accessible_resources": [
