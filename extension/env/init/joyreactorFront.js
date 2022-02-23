@@ -18,7 +18,7 @@ if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === windo
                 K_FAV.load('items', function() {
                     K_FAV.initFormatPage();
                     KellyTools.addEventPListener(window, "load", function() {
-                        if (K_FAV.getGlobal('env').getMainContainers()) handler.formatPostContainers(); 
+                        if (K_FAV.getGlobal('env').getMainContainers()) K_FAV.formatPostContainers(); 
                     }, 'init_');                            
                 }); 
             });
