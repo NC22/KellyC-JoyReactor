@@ -16,6 +16,7 @@ if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === windo
                 
                 if (fav.coptions.disabled) return;
                 
+                K_FAV.initBgEvents();
                 K_FAV.load('items', function() {
                     K_FAV.initFormatPage();
                     KellyTools.addEventPListener(window, "load", function() {
