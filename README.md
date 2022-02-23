@@ -1,16 +1,16 @@
 <h1><img src="https://catface.ru/userfiles/media/udata_1645451107_nefuamyi.png" width="32"> KellyC JoyReactor</h1>
 
 <p></p>
-
+<p></p>
 <h2>Описание</h2>
 
-<p>Редакция расширения <a href="https://github.com/NC22/KellyC-Image-Downloader"  target="_blank">KellyC Image Downloader</a> встроенная только в сайты относящиеся к проекту JoyReactor, без <a href="https://kellydownloader.com/ru/links/recorder/" target="_blank">модуля записи</a></p>
+<p>KellyC JoyReactor (альт. название для магазинов расширений KellyC Longhorn) - редакция расширения <a href="https://github.com/NC22/KellyC-Image-Downloader" target="_blank">KellyC Image Downloader</a> встроенная только в сайты относящиеся к проекту JoyReactor. Исключен <a href="https://kellydownloader.com/ru/links/recorder/" target="_blank">модуль записи</a> и доп. фильтры</p>
 <p>Имеет ряд функций конкретно под реахтур :</p>
 <ul>
 <li>Кнопка быстрого сохранения для публикации</li>
 <li>Пакетный сбор картинок из тегов</li>
 <li>Кнопка добавления в закладки для комментов и постов</li>
-<li>Pазблокировка заблокированного контента</li>
+<li>Восстановление скрытого контента</li>
 
 <ul>
 <li>на <a href="http://m.reactor.cc" target="_blank">m.reactor.cc</a> опционально показывать скрытые - "ненадежные" посты (насколько понял это посты которые не доступны без подписки на тег - например посты из "секретных разделов", "песочницы" и возможно какие-то еще)</li>
