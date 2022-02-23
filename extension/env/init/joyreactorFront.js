@@ -1,54 +1,52 @@
 
 if (typeof K_FAV == 'undefined' || K_FAV === null) {
     
+    // wait body element rendered 
     
-    var searchNode = function(nodes, tagName) {
+    var onDOMRendered = function() {
+        if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 ) {
+            
+            K_FAV = new KellyFavItems({env : KellyProfileTopJoyreactor.getInstance(), location : window.location, allowMobile : true});
+            KellyProfileTopJoyreactor.getInstance().initOnLoad(K_FAV.initFormatPage); // init hooks before joyreactor page, wait until joyreator page will load post list
+            
+        } else {
         
-        tagName = tagName.toLowerCase();
-        for (var i = 0; i < nodes.length; i++) {
-                    
-           if (nodes[i].tagName && nodes[i].tagName.toLowerCase() == tagName) {
-                return nodes[i];
-           }
-           
+            K_FAV = new KellyFavItems({env : KellyProfileJoyreactor.getInstance(), location : window.location});          
+            K_FAV.load('cfg', function(fav) {
+                
+                if (fav.coptions.disabled) return;
+                
+                K_FAV.load('items', function() {
+                    K_FAV.initFormatPage();
+                    KellyTools.addEventPListener(window, "load", function() {
+                        if (K_FAV.getGlobal('env').getMainContainers()) handler.formatPostContainers(); 
+                    }, 'init_');                            
+                }); 
+            });
         }
         
-        return false;
-   }
+        if (typeof bodyObserver != 'undefined') bodyObserver.disconnect(); 
+    }
     
-    var observer = new MutationObserver(function(mutations) {
+    if (document.body) { // "run_at": "document_idle"
         
-        if (mutations.length > 0) {
-            
-             for (var i = 0; i < mutations.length; i++) {
-                    
-                   if (mutations[i].target == document.documentElement) {
-                        var body = searchNode(mutations[i].addedNodes, 'body');
-                        if (body) {
-                            
-                            if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 ) {
-                                
-                                K_FAV = new KellyFavItems({env : KellyProfileTopJoyreactor.getInstance(), location : window.location, allowMobile : true});
-                                KellyProfileTopJoyreactor.getInstance().initOnLoad(K_FAV.initFormatPage);
-                                
-                            } else {
-                                
-                                K_FAV = new KellyFavItems({env : KellyProfileJoyreactor.getInstance(), location : window.location});
-                                if (!K_FAV.exec()) K_FAV = null;
-                            }
-                            
-                            observer.disconnect(); 
-                        }                        
-                   }
-                   
-                }  
-            
-        }                
-    });
+        onDOMRendered();
+        
+    } else { // "run_at": "document_start"
   
-    
-    observer.observe(document.documentElement, {childList: true, subtree: false});
-       
+        if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 ) {
+            
+            var bodyObserver = new MutationObserver(function(mutations) {    
+                 for (var i = 0; i < mutations.length; i++) {
+                    if (KellyTools.searchNode(mutations[i].addedNodes, 'body')) return onDOMRendered();
+                }                
+            });   
+        
+            bodyObserver.observe(document.documentElement, {childList: true, subtree: true});  
+        } else {
+            document.addEventListener("DOMContentLoaded", onDOMRendered);
+        }
+    }
 }
 
 // keep empty space to prevent syntax errors if some symbols will added at end

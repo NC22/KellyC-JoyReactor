@@ -14,14 +14,23 @@ var KellyProfileTopJoyreactor = new Object();
         
         handler.events.onPageReadyOrig = handler.events.onPageReady;
         handler.events.onExtensionReady = function() {
-            handler.sidebarConfig.widthBase = 0;
-            
-            setTimeout(function() {
-                handler.sidebarConfig.topMax = handler.mContainers.siteContent.getBoundingClientRect().top + KellyTools.getScrollTop() + 24;   
-            }, 300);
-            
+           
             if (handler.unlockManager) handler.unlockManager.formatCensoredPosts();
+            setTimeout(handler.updateSidebarConfig, 400);
         };
+        
+        handler.updateSidebarConfig = function() {
+            
+            handler.sidebarConfig.widthBase = 0;
+            var pointer = handler.mContainers.siteContent;
+            if (!pointer || pointer.style.display == 'none') {
+                pointer = handler.mContainers.favContent;
+            }
+            
+            handler.sidebarConfig.topMax = pointer.getBoundingClientRect().top + KellyTools.getScrollTop() + 24;   
+            console.log(handler.sidebarConfig);
+            console.log(pointer);
+        }
         
         /* 
            
@@ -209,6 +218,8 @@ var KellyProfileTopJoyreactor = new Object();
             handler.initFetchHook(addReady);
             handler.fav.load('cfg', function(fav) {
                 
+                if (fav.coptions.disabled) return;
+                
                 handler.fav.initBgEvents();
                 handler.fav.load('items', addReady);   
             });   
@@ -340,14 +351,18 @@ var KellyProfileTopJoyreactor = new Object();
             }
             
             KellyTools.log('formatComments : ' + comments.length + ' - '+ block.id);
-        }    
-        
+        }  
+
         handler.initUpdateWatcher = function() {
             
             handler.observer = new MutationObserver(function(mutations) {
-
+                
                 for (var i = 0; i < mutations.length; i++) {
-                    
+
+                   //if ( mutations[i].addedNodes.length > 0) {
+                   //    console.log( mutations[i]);
+                   //}
+                   
                    if (mutations[i].target.classList.contains('content')) {
                         var post = KellyTools.getParentByClass(mutations[i].target, handler.className + '-post');
                         if (post) {
@@ -356,27 +371,27 @@ var KellyProfileTopJoyreactor = new Object();
                         
                         return;
                         
-                   } else if (mutations[i].target.classList.contains(handler.mainContainerClass)) {
-                       
-                        handler.initPosts(function() {
-
-                            KellyTools.log('New page loaded, format publications');
+                   } else if ( 
+                        KellyTools.searchNode(mutations[i].addedNodes, false, 'content-container') ||
+                        KellyTools.searchNode(mutations[i].addedNodes, false, 'jr-container') ||
+                        (mutations[i].target.classList.contains(handler.mainContainerClass) && mutations[i].addedNodes.length > 0)
+                    ) {
+                        
+                       handler.getMainContainers();
+                       setTimeout(handler.updateSidebarConfig, 400);
+                       handler.initPosts(function() {
                             
-                            handler.getMainContainers();
+                           KellyTools.log('New page loaded, format publications');
+                                                
+                           if (handler.fav.getGlobal('mode') == 'main') handler.fav.closeSidebar();
+                           else handler.fav.hideFavoritesBlock();
                             
-                            if (handler.fav.getGlobal('mode') == 'main') handler.fav.closeSidebar();
-                            else handler.fav.hideFavoritesBlock();
-                            
-                            handler.fav.formatPostContainers();  
-                        });
-                       
+                           handler.fav.formatPostContainers();  
+                       });
+                        
                        return;
                         
-                    } else if (mutations[i].target.id == 'root' && 
-                               mutations[i].removedNodes.length > 0 && 
-                               mutations[i].removedNodes[0].nodeType == Node.ELEMENT_NODE && 
-                               mutations[i].removedNodes[0].classList.contains('container') &&
-                               handler.fav.getGlobal('mode') == 'main') {
+                    } else if (mutations[i].target.id == 'root' && KellyTools.searchNode(mutations[i].removedNodes, false, 'container') && handler.fav.getGlobal('mode') == 'main') {
                                    
                         handler.fav.closeSidebar();
                         KellyTools.log('Page publications removed');

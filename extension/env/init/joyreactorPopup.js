@@ -20,7 +20,7 @@ KellyCPopup.showPagePopup = function() {
     var html = '';
         html += '<div class="' + handler.baseClass + '-popup-go"><button class="' + handler.baseClass + '-options-btn tab-navigation" data-source="/env/html/joyreactorDownloader.html?tab=options">' + handler.getLoc('options') + '</button></div>';
         
-        html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="/env/html/joyreactorDownloader.html">' + handler.getLoc('saved') + '</button>';
+        html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="/env/html/joyreactorDownloader.html?tab=images">' + handler.getLoc('saved') + '</button>';
         html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="' + env.extLinks.github + '/issues">Сообщить о проблеме</button>';
         html += '<div class="disclaimer" data-source="' + KellyCPopup.reportIssue + '">----- BOTTOM ---- TEXT ----</button>';
                    
