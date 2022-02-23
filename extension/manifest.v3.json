@@ -1,5 +1,6 @@
 {
    "content_scripts": [ {
+      "run_at": "document_start",
       "js": [
             "widget/kellyTooltip.js", 
             "widget/kellyTileGrid.js", 
@@ -24,16 +25,27 @@
       ],
       "matches": [ 
             "*://joyreactor.cc/*", 
+            "*://*.joyreactor.cc/*", 
             "*://reactor.cc/*", 
+            "*://*.reactor.cc/*", 
             "*://joyreactor.com/*",
+            "*://*.joyreactor.com/*",
             "*://jr-proxy.com/*",
+            "*://*.jr-proxy.com/*",
             "*://jrproxy.com/*",
+            "*://*.jrproxy.com/*",
             "*://cookreactor.com/*",
+            "*://*.cookreactor.com/*",
             "*://pornreactor.cc/*",
+            "*://*.pornreactor.cc/*",
             "*://thatpervert.com/*",
+            "*://*.thatpervert.com/*",
             "*://fapreactor.com/*",
+            "*://*.fapreactor.com/*",
             "*://safereactor.cc/*",
-            "*://reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion/*"
+            "*://*.safereactor.cc/*",
+            "*://reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion/*",
+            "*://*.reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion/*"
         ]
    } ],
    "host_permissions": ["*://*/*"], 
@@ -42,9 +54,9 @@
    "name": "KellyC JoyReactor",
    "description": "Tweeks for JoyReactor site",
    "icons": { 
-        "32": "env/img/icon32x32.png",
-        "44": "env/img/icon44x44.png",
-        "128": "env/img/icon128x128.png" },
+        "32": "env/img/icon32x32_joyreactor.png",
+        "44": "env/img/icon44x44_joyreactor.png",
+        "128": "env/img/icon128x128.png_joyreactor" },
    "author" : "nradiowave",
    "default_locale" : "en",
    "permissions": [
@@ -69,7 +81,7 @@
    },
    "web_accessible_resources":  [{
       "resources": ["env/css/*.css", "env/html/*.html", "env/dynamic/*.js"],
-      "matches": [],
+      "matches": ["<all_urls>"],
       "extension_ids": []
     }]
 }
