@@ -1,11 +1,8 @@
 KellyCPopup = new Object();
 KellyCPopup.baseClass = 'kelly-popup';
+KellyCPopup.getLoc = function(loc) { return KellyLoc.s('', loc); }
 
-KellyCPopup.getLoc = function(loc) {
-    return KellyLoc.s('', loc);
-}
-
-KellyCPopup.showPagePopup = function() {
+KellyCPopup.init = function(options) {
             
     var env = KellyProfileJoyreactor.getInstance();
     
@@ -21,7 +18,16 @@ KellyCPopup.showPagePopup = function() {
         html += '<div class="' + handler.baseClass + '-popup-go"><button class="' + handler.baseClass + '-options-btn tab-navigation" data-source="/env/html/joyreactorDownloader.html?tab=options">' + handler.getLoc('options') + '</button></div>';
         
         html += '<button class="' + handler.baseClass + '-additions-show tab-navigation" data-source="/env/html/joyreactorDownloader.html?tab=images">' + handler.getLoc('saved') + '</button>';
-        html += '<button class="' + handler.baseClass + '-additions-show tab-navigation support" data-source="' + env.extLinks.support + '">' + handler.getLoc('link_support') + '</button>';
+    
+        if (options.toolbar && options.toolbar.heartHidden) {
+            
+        } else {
+            html += '<button class="' + handler.baseClass + '-additions-show tab-navigation support" data-source="' + env.extLinks.support + '">\
+                <span class="' + handler.baseClass + '-icon-cup"></span>\
+                <span class="' + handler.baseClass + '-text">' + handler.getLoc('link_support') + '</span>\
+            </button>';
+        }
+    
         html += '<div class="disclaimer"><a class="tab-navigation" href="' + env.extLinks.github + '/issues" target="_blank">' + handler.getLoc('link_report_issue') + '</a></div>';
                    
     KellyTools.setHTMLData(handler.page, html);
@@ -36,4 +42,11 @@ KellyCPopup.showPagePopup = function() {
     }  
 }
 
-KellyCPopup.showPagePopup();
+KellyTools.loadFrontJs(function() {
+    
+    K_FAV = new KellyFavItems({env : KellyProfileJoyreactor.getInstance()});    
+    K_FAV.load('cfg', function(fav) {
+        KellyCPopup.init(fav.coptions); 
+    }); 
+    
+});

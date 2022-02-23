@@ -44,13 +44,26 @@ button:hover {
 }
 
 button.support {
+    background-color: #56afdf;
+    color: #fff;
+}
+
+.kelly-popup-icon-cup {
     background-image: url(../../env/img/cup.png);
-    background-size: 32px;
+    background-size: 28px;
     background-repeat: no-repeat;
     background-position-y: center;
     background-position-x: 12px;
-    background-color: #56afdf;
-    color: #fff;
+    display : inline-block;
+    vertical-align : middle;
+    width: 40px;
+    height: 24px;
+}
+
+.kelly-popup-text {
+    display : inline-block;
+    margin-right : 0;
+    vertical-align : middle;
 }
 
 button.support:hover {
