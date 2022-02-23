@@ -56,7 +56,7 @@
    "icons": { 
         "32": "env/img/icon32x32_joyreactor.png",
         "44": "env/img/icon44x44_joyreactor.png",
-        "128": "env/img/icon128x128.png_joyreactor" },
+        "128": "env/img/icon128x128_joyreactor.png" },
    "author" : "nradiowave",
    "default_locale" : "en",
    "permissions": [
