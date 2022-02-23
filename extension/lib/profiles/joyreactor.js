@@ -73,6 +73,8 @@ function KellyProfileJoyreactor() {
         }
         
         handler.hostClass = handler.className + '-' + hostParts.join("-");
+        
+        return handler.isDomainMatch();
     }
     
     this.isNSFW = function() {

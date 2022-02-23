@@ -1,8 +1,9 @@
-if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === window.parent.location) {
+if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === window.parent.location && KellyProfileJoyreactor.getInstance().setLocation(window.location)) {
     
     // wait body element rendered 
     
     var onDOMRendered = function() {
+        
         if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 ) {
             
             K_FAV = new KellyFavItems({env : KellyProfileTopJoyreactor.getInstance(), location : window.location, allowMobile : true});
