@@ -4,8 +4,8 @@
 <p></p>
 <h2>Описание</h2>
 
-<p>KellyC JoyReactor (альт. название для магазинов расширений KellyC Longhorn) - редакция расширения <a href="https://github.com/NC22/KellyC-Image-Downloader" target="_blank">KellyC Image Downloader</a> встроенная только в сайты относящиеся к проекту JoyReactor. Исключен <a href="https://kellydownloader.com/ru/links/recorder/" target="_blank">модуль записи</a> и доп. фильтры</p>
-<p>Имеет ряд функций конкретно под реахтур :</p>
+<p>KellyC JoyReactor - редакция расширения <a href="https://github.com/NC22/KellyC-Image-Downloader" target="_blank">KellyC Image Downloader</a> встроенная только в сайты с движком JoyReactor'а. Исключен <a href="https://kellydownloader.com/ru/links/recorder/" target="_blank">модуль записи</a> и доп. фильтры</p>
+<p>Имеет ряд функций конкретно под реактор :</p>
 <ul>
 <li>Кнопка быстрого сохранения для публикации</li>
 <li>Пакетный сбор картинок из тегов</li>
