@@ -8,7 +8,7 @@ KellyCPopup.init = function(options) {
     
     var handler = KellyCPopup;        
         handler.page = document.getElementById('page');
-        handler.title =  'KellyC Longhorn v' + (KellyTools.getBrowser().runtime.getManifest ? KellyTools.getBrowser().runtime.getManifest().version : '');
+        handler.title =  'KellyC JoyReactor v' + (KellyTools.getBrowser().runtime.getManifest ? KellyTools.getBrowser().runtime.getManifest().version : '');
         handler.titleHtml = '<span class="' + handler.baseClass + '-ext-name">' + handler.title + '</span><span class="kelly-copyright">created by <a class="tab-navigation"  href="' + env.extLinks.author + '" target="_blank">nradiowave</a></span>';
                 
     document.title = handler.title;        

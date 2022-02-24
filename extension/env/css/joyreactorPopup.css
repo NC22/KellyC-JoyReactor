@@ -99,8 +99,9 @@ button.support:hover {
 
 .kelly-copyright a {
     background: 0;
-    color:  #81d3ff;
+    color: #dadada;
     padding: 0;
+    font-weight: bold;
 }
 
 .page-options {
