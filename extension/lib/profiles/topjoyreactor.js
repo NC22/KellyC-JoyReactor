@@ -43,6 +43,7 @@ var KellyProfileTopJoyreactor = new Object();
             
             if (method == 'registerDownloader' && !handler.webRequestsReady) {
                 
+                clearTimeout(handler.failBGTimer);
                 KellyTools.log('webRequests ready | Delayed events : ' + handler.onWebRequestReadyE.length);
                 handler.webRequestsReady = true;
                 
@@ -221,6 +222,20 @@ var KellyProfileTopJoyreactor = new Object();
                 if (fav.coptions.disabled) return;
                 
                 handler.fav.initBgEvents();
+                
+                /* too long conection to local bg process, something wrong. manifest v3 serwice workers currently glithy as fuck */
+                
+                handler.failBGTimer = setTimeout(function() {
+                    KellyTooltip.autoloadCss = handler.className + '-tooltipster';
+                    var tooltip = handler.fav.getTooltip();
+                    tooltip.resetToDefaultOptions();                        
+                    tooltip.setMessage('Расширение KellyC не смогло корректно инициализировать фоновый процесс, возможны проблемы в обработке контента. Перезагрузите браузер или вкладку. Если проблема повторится, сообщите о проблеме разработчику одним из возможных способов <a href="https://kellydownloader.com/ru/links/issues/" target="_blank" style="color: #ff7600; font-weight: bold;">здесь</a>'); 
+                    tooltip.show(true); 
+                    
+                    handler.fav.tooltipBeasy = true; 
+                    handler.events.onWebRequestReady('registerDownloader', false);
+                }, 2000);
+                
                 handler.fav.load('items', addReady);   
             });   
                 
