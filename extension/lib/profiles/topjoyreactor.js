@@ -28,8 +28,8 @@ var KellyProfileTopJoyreactor = new Object();
             }
             
             handler.sidebarConfig.topMax = pointer.getBoundingClientRect().top + KellyTools.getScrollTop() + 24;   
-            console.log(handler.sidebarConfig);
-            console.log(pointer);
+            //console.log(handler.sidebarConfig);
+            //console.log(pointer);
         }
         
         /* 
@@ -124,8 +124,8 @@ var KellyProfileTopJoyreactor = new Object();
                                 
                                 posts = getGraphQLPosts(e.data.eventDataIn.responseJson.data);
                             }
-                             
-                            console.log(posts);
+                            
+                            // console.log(posts);
                              
                         } catch(e) {
                             
@@ -134,6 +134,9 @@ var KellyProfileTopJoyreactor = new Object();
                         }
                         
                         if (posts) {
+                            
+                            KellyTools.log('onRequestReady : GraphQL posts data updated ' + posts.length); 
+                            
                             for (var i = 0; i < posts.length; i++) {
                                 posts[i].text += '<span class="kelly-post-id" style="display : none;" data-id="' + (KellyProfileJoyreactorUnlock.getNodeId(posts[i].id)) + '"></span>';
                                 posts[i].unsafe = false;
