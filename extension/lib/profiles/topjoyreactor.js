@@ -110,7 +110,7 @@ var KellyProfileTopJoyreactor = new Object();
                     if (e.data.eventName == 'onRequestReady') {
                         
                         var modifyResponse = false;
-                        console.log(handler.unlockAnon);
+                        
                         if (handler.unlockAnon && e.data.eventDataIn.responseJson.data && typeof e.data.eventDataIn.responseJson.data.me != 'undefined' && !e.data.eventDataIn.responseJson.data.me) {
                             
                             var id = 1005500 + Math.floor(Math.random() * 400);
@@ -267,8 +267,6 @@ var KellyProfileTopJoyreactor = new Object();
                 if (fav.coptions.unlock && fav.coptions.unlock.anon) {
                      handler.unlockAnon = true;
                 }
-                
-                console.log(fav.coptions.unlock);
                 
                 handler.fav.initBgEvents();
                 
