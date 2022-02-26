@@ -14,36 +14,49 @@
         });
     }
     
-    window.fetch = function(input, init){
+    window.fetch = function(url, initCfg){
                    
         requestIds++;                                                 
         requests[requestIds] = {}; 
+        var requestCfg = {body : initCfg ? initCfg.body : ''};
         
-        return waitFront(requestIds, 'onBeforeRequestReady', {}).then(function() {
+        return waitFront(requestIds, 'onBeforeRequestReady', {requestCfg : requestCfg, requestUrl : url}).then(function() {
             
-            if (requests[requestIds]['onBeforeRequestReady'].requestInit) {
-                input = requests[requestIds]['onBeforeRequestReady'].requestInput;
-                init = requests[requestIds]['onBeforeRequestReady'].requestInit;
+            // rewrite all init data - untested, need to add AbortController check \ reassign
+            
+            if (requests[requestIds]['onBeforeRequestReady'].requestCfg) {
+                url = requests[requestIds]['onBeforeRequestReady'].requestUrl;
+                initCfg = requests[requestIds]['onBeforeRequestReady'].requestCfg;
             }
             
-            return originalFetch(input, init).then(function(response){
+            // rewrite only request body
+            
+            if (requests[requestIds]['onBeforeRequestReady'].requestBody) {
+                initCfg.body = requests[requestIds]['onBeforeRequestReady'].requestBody;
+            }
+            
+            return originalFetch(url, initCfg).then(function(response){
                 
-                return new Promise(function(resolve){ // reject for json parser?
+                return new Promise(function(resolve){ // reject for json parser fail ?
                     
                     if (response.headers.get("Content-Type").indexOf('json') != -1) {
                         
                         response.clone().json().then(function(json){                        
                                      
-                            return waitFront(requestIds, 'onRequestReady', {requestCfg : {body : init ? init.body : ''}, requestInput : input, responseJson : json, responseHeaders : Object.fromEntries(response.headers.entries())}).then(function() {
+                            return waitFront(requestIds, 'onRequestReady', {requestCfg : requestCfg, requestUrl : url, responseJson : json, responseHeaders : Object.fromEntries(response.headers.entries())}).then(function() {
                                 
-                                if (requests[requestIds]['onRequestReady'].responseBody) {                                                                        
+                                // rewrite response body 
+                                
+                                if (requests[requestIds]['onRequestReady'].responseBody) {
+                                    
                                     if (requests[requestIds]['onRequestReady'].responseOptions) requests[requestIds]['onRequestReady'].responseOptions.headers = new Headers(requests[requestIds]['onRequestReady'].responseOptions.headers);
                                     resolve(new Response(requests[requestIds]['onRequestReady'].responseBody, requests[requestIds]['onRequestReady'].responseOptions));
+                                    
                                 } else resolve(response);
                 
                             });
                                                 
-                        });
+                        }); // ... todo catch error, resolve if needed
                         
                     } else resolve(response); 
                                       

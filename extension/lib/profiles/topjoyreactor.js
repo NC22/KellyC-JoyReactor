@@ -108,7 +108,32 @@ var KellyProfileTopJoyreactor = new Object();
                     };     
                     
                     if (e.data.eventName == 'onRequestReady') {
-                                                    
+                        
+                        var modifyResponse = false;
+                        console.log(handler.unlockAnon);
+                        if (handler.unlockAnon && e.data.eventDataIn.responseJson.data && typeof e.data.eventDataIn.responseJson.data.me != 'undefined' && !e.data.eventDataIn.responseJson.data.me) {
+                            
+                            var id = 1005500 + Math.floor(Math.random() * 400);
+
+                            e.data.eventDataIn.responseJson.data.me = {
+                                blockedBlogs: [],
+                                gifByClick: false,
+                                moderatedBlogs: [],
+                                subscribedBlogs: [],
+                                user : {
+                                    active: true,
+                                    id: window.btoa('User:' + id),
+                                    username: "Anon" + Math.floor(Math.random() * 400),
+                                },
+                            }
+                            
+                            
+                            KellyTools.log('onRequestReady : GraphQL anon session enable : ' + id); 
+                            
+                            modifyResponse = true;
+                        }
+                        
+                                
                         var posts = false;
                         try {
                             
@@ -139,24 +164,33 @@ var KellyProfileTopJoyreactor = new Object();
                             
                             for (var i = 0; i < posts.length; i++) {
                                 posts[i].text += '<span class="kelly-post-id" style="display : none;" data-id="' + (KellyProfileJoyreactorUnlock.getNodeId(posts[i].id)) + '"></span>';
-                                posts[i].unsafe = false;
+                                if (handler.unlockUnsafe) posts[i].unsafe = false;
                             }
+                            
+                            modifyResponse = true;
                         }
                         
-                        response.eventDataOut = {
+                        if (modifyResponse) {
                             
-                            responseBody : JSON.stringify(e.data.eventDataIn.responseJson),
-                            
-                            responseOptions : { 
-                                "status" : 200 ,
-                                "statusText" : "OK", 
-                                "headers" : e.data.eventDataIn.responseHeaders,
-                            },
-                        };
+                            response.eventDataOut = {
+                                
+                                responseBody : JSON.stringify(e.data.eventDataIn.responseJson),
+                                
+                                responseOptions : { 
+                                    "status" : 200 ,
+                                    "statusText" : "OK", 
+                                    "headers" : e.data.eventDataIn.responseHeaders,
+                                },
+                            };
+                        }
                                                 
                         e.source.postMessage(response, window.location.origin);
                                         
                     } else if (e.data.eventName == 'onBeforeRequestReady') {
+                        
+                        // if (e.data.eventDataIn.requestCfg.body.indexOf('isAuthorised') != -1) {
+                        //    response.eventDataOut = {requestBody : e.data.eventDataIn.requestCfg.body.replace('"isAuthorised":false', '"isAuthorised":true')};
+                        // }
                         
                         if (handler.webRequestsReady) {                            
                           
@@ -223,6 +257,18 @@ var KellyProfileTopJoyreactor = new Object();
             handler.fav.load('cfg', function(fav) {
                 
                 if (fav.coptions.disabled) return;
+                
+                handler.unlockUnsafe = false;
+                if (fav.coptions.unlock && fav.coptions.unlock.unsafe) {
+                     handler.unlockUnsafe = true;
+                }
+                
+                handler.unlockAnon = false;
+                if (fav.coptions.unlock && fav.coptions.unlock.anon) {
+                     handler.unlockAnon = true;
+                }
+                
+                console.log(fav.coptions.unlock);
                 
                 handler.fav.initBgEvents();
                 

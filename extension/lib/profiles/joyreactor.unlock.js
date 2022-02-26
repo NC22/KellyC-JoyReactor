@@ -471,7 +471,9 @@ var KellyProfileJoyreactorUnlock = {
         
             if (typeof data.coptions.unlock.cache == 'undefined') data.coptions.unlock.cache = true;
             if (typeof data.coptions.unlock.auth == 'undefined') data.coptions.unlock.auth = true;   
-            
+            if (typeof data.coptions.unlock.unsafe == 'undefined') data.coptions.unlock.unsafe = true;   
+            if (typeof data.coptions.unlock.anon == 'undefined') data.coptions.unlock.anon = true;   
+
             KellyProfileJoyreactorUnlock.options = data.coptions;
         }
         
@@ -481,6 +483,8 @@ var KellyProfileJoyreactorUnlock = {
             optionsManager.cfgInput['unlock_unlockCensored'] = {name : 'censored', parent : 'unlock', loc : 'unlock_censored', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredMode'] = {name : 'censoredMode', parent : 'unlock', loc : 'unlock_censored_mode', default : 'auto', listLoc : ['unlock_censored_auto', 'unlock_censored_manual'], list : ['auto' , 'click'], type : 'enum'};
             optionsManager.cfgInput['unlock_unlockCensoredCache'] = {name : 'cache', parent : 'unlock', loc : 'unlock_censored_cache', type : 'bool', default : true};
+            optionsManager.cfgInput['unlock_unlockCensoredUnsafe'] = {name : 'unsafe', parent : 'unlock', loc : 'unlock_censored_unsafe', notice : 'unlock_censored_unsafe_notice', type : 'bool', default : true};
+            optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAuth'] = {name : 'auth', parent : 'unlock', loc : 'unlock_censored_auth', type : 'bool', default : true};
         }      
         return this;
