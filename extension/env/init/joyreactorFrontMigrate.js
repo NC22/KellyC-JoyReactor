@@ -28,7 +28,6 @@ if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === windo
                     height: 29px;\
                     left: 51px;\
                     bottom: 46px;\
-                    -moz-box-shadow: 5px 22px 73px 0px rgba(34, 60, 80, 0.8);\
                     box-shadow: 0 0 10px 10px #1f1f1f82;\
                 }\
                 .kelly-jr-ui-migrate-diskete {\
