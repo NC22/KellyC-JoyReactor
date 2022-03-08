@@ -30,7 +30,7 @@
    } ],
    "host_permissions": ["*://*/*"], 
    "manifest_version" : 3,
-   "version": "1.2.1.8",
+   "version": "1.2.2.0",
    "name": "KellyC JoyReactor",
    "description": "Bookmarks, image collector for several sites that supports JoyReactor CMS engine",
    "icons": { 
