@@ -49,7 +49,7 @@
         ]
    } ],
    "manifest_version" : 2,
-   "version": "1.2.1.7",
+   "version": "1.2.2.0",
    "name": "KellyC JoyReactor",
    "description": "Tweeks for JoyReactor site",
    "icons": { 
