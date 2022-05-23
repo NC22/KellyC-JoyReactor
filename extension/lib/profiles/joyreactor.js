@@ -433,7 +433,7 @@ function KellyProfileJoyreactor() {
         var addToFav = KellyTools.getElementByClass(postBlock, className);        
         if (!addToFav) {
             
-            if (side) {
+            if (shareButtonsBlock && side) {
                 addToFav = document.createElement('DIV'); 
                 addToFav.className =  handler.hostClass + ' ' + handler.className + '-post-button-base ' + handler.className + '-icon-diskete ' + className;
                      
@@ -569,24 +569,24 @@ function KellyProfileJoyreactor() {
         var shareButtonsBlock = KellyTools.getElementByClass(postBlock, 'share_buttons');        
         if (!shareButtonsBlock) {
             KellyTools.log('formatPostContainer : cant find placeholder for append "Add to fav button"'); 
-            return false;
-        }
-               
-        var fastSave = handler.fav.getFastSave();
-        if (!isPostCensored(postBlock)) {                           
-            fastSave.showFastSaveButton(postBlock, shareButtonsBlock, coptions.fastsave.enabled, false, handler.className);   
-            fastSave.showFastSaveButton(postBlock, shareButtonsBlock, coptions.fastsave.configurableEnabled, true, handler.className);            
-        }
-                 
-        if (coptions.hideSoc) {
-            var shareButtons = shareButtonsBlock.childNodes;
-            for (var i = 0; i < shareButtons.length; i++) {            
-                if (shareButtons[i].tagName == 'A' && shareButtons[i].className.indexOf('share') != -1) {
-                    // keep technically alive
-                    shareButtons[i].setAttribute('style', 'height : 0px; width : 0px; opacity : 0; margin : 0px; padding : 0px; display : block; overflow : hidden;');
-                }
+        } else {
+            
+            var fastSave = handler.fav.getFastSave();
+            if (!isPostCensored(postBlock)) {                           
+                fastSave.showFastSaveButton(postBlock, shareButtonsBlock, coptions.fastsave.enabled, false, handler.className);   
+                fastSave.showFastSaveButton(postBlock, shareButtonsBlock, coptions.fastsave.configurableEnabled, true, handler.className);            
             }
-        }   
+                     
+            if (coptions.hideSoc) {
+                var shareButtons = shareButtonsBlock.childNodes;
+                for (var i = 0; i < shareButtons.length; i++) {            
+                    if (shareButtons[i].tagName == 'A' && shareButtons[i].className.indexOf('share') != -1) {
+                        // keep technically alive
+                        shareButtons[i].setAttribute('style', 'height : 0px; width : 0px; opacity : 0; margin : 0px; padding : 0px; display : block; overflow : hidden;');
+                    }
+                }
+            }    
+        }        
         
         if (coptions.hideAddToFav) return false;
         updateAddToFavButton(postBlock, shareButtonsBlock, coptions.addToFavSide);
@@ -719,7 +719,7 @@ function KellyProfileJoyreactor() {
             var host = handler.location.host;
             
                  if (handler.location.domain == 'reactor.cc') host = 'reactor.cc'; // prevent 301 redirect in fandoms for media requests
-            else if (host == 'top.joyreactor.cc') host = 'joyreactor.cc';
+            else if (host == 'top.joyreactor.cc' || host == 'm.joyreactor.cc' || host == 'm.reactor.cc') host = 'joyreactor.cc';
             
             url  = handler.location.protocol + '//' + imgServer[0] + '.' + host + '/pics/' + type + '/';
             url += (animationFormat ? format + '/' : '') + (!animationFormat && full ? 'full/' : '') + filename;

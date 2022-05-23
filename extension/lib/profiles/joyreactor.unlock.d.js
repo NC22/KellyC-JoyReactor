@@ -90,8 +90,9 @@ KellyEDJRUnlocker.initWebRequest = function() {
         KellyTools.wRequestAddListener('onHeadersReceived', function(e) {
            
            var url = KellyEDJRUnlocker.getInitiatorUrl(e);
-           if (url.indexOf('://m.') == -1 && url.indexOf('-extension://') == -1) return;
-                     
+           if (url.indexOf('://m.') == -1 && url.indexOf('-extension://') == -1) return; // needed only on new new version (graphQL API based) of reactor and on ext separate page
+           if (url.indexOf('m.reactor.cc') != -1) return; // old mobile version use default behaiv from kellyDispetcher
+           
            KellyTools.wRequestSetHeader(e.responseHeaders, "Access-Control-Allow-Origin", url);
            KellyTools.wRequestSetHeader(e.responseHeaders, 'Access-Control-Allow-Credentials', "true");
            KellyTools.wRequestSetHeader(e.responseHeaders, 'Access-Control-Allow-Headers', "Content-Type"); 
