@@ -206,6 +206,12 @@ function KellyProfileJoyreactor() {
                 handler.observer.observe(document.getElementById('post_list'), {childList: true});
             }
             
+            if (typeof KellyDialog != 'undefined') {
+                
+                var dialog = new KellyDialog({favEnv : handler.fav, mode : 'imageDownloader'});
+                    dialog.init();
+            }
+            
             if ( document.getElementById('searchBar') && document.getElementById('submenu') && (
                 (handler.location.domain == 'joyreactor.cc' && handler.location.host != 'top.joyreactor.cc') ||
                 (handler.location.domain == 'reactor.cc' && handler.location.host != 'old.reactor.cc'))

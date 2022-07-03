@@ -87,7 +87,12 @@ var KellyProfileTopJoyreactor = new Object();
                         if (!inData) return false;
                         
                         if (inData.node) { // e.data.eventDataIn.requestCfg.body.indexOf(...) RefetchPagerQuery
-                             return inData.node.postPager.posts;
+                             
+                             if (!inData.node.postPager) 
+                                 return inData.node.posts; 
+                             else 
+                                 return inData.node.postPager.posts;
+                             
                         } else if (inData.blog) { // e.data.eventDataIn.requestCfg.body.indexOf(...) TagPageQuery 
                             return inData.blog.postPager.posts; 
                         } else if (inData.user) { // e.data.eventDataIn.requestCfg.body.indexOf(...) UserProfilePageQuery
@@ -137,6 +142,8 @@ var KellyProfileTopJoyreactor = new Object();
                         var posts = false;
                         try {
                             
+                            console.log(e.data.eventDataIn);
+                            
                             if (Object.prototype.toString.call(e.data.eventDataIn.responseJson) === '[object Array]') {
                                 
                                 for (var i = 0; i < e.data.eventDataIn.responseJson.length; i++) {
@@ -164,7 +171,13 @@ var KellyProfileTopJoyreactor = new Object();
                             
                             for (var i = 0; i < posts.length; i++) {
                                 posts[i].text += '<span class="kelly-post-id" style="display : none;" data-id="' + (KellyProfileJoyreactorUnlock.getNodeId(posts[i].id)) + '"></span>';
-                                if (handler.unlockUnsafe) posts[i].unsafe = false;
+                                if (handler.unlockUnsafe) {
+                                    if (posts[i].unsafe && handler.unlockManager) {
+                                        posts[i].text += '<span class="kelly-copyright-placeholder"></span>';
+                                    }
+                                    
+                                    posts[i].unsafe = false;
+                                }
                             }
                             
                             modifyResponse = true;
@@ -229,7 +242,7 @@ var KellyProfileTopJoyreactor = new Object();
                 
                 } else {
                     
-                    var linkButton = post[i].querySelector('.post-footer button.ant-dropdown-trigger'), postId = post[i].querySelector('.kelly-post-id');
+                    var linkButton = post[i].querySelector('.post-footer button.ant-dropdown-trigger'), postId = post[i].querySelector('.kelly-post-id'), copyright = post[i].querySelector('.kelly-copyright-placeholder');
                     if (linkButton && postId) {
                         
                         link = document.createElement('A');
@@ -237,8 +250,12 @@ var KellyProfileTopJoyreactor = new Object();
                         link.href = '/post/' + postId.getAttribute('data-id');
                         linkButton.parentNode.insertBefore(link, linkButton); 
                         post[i].classList.add(handler.className + '-post');
+                        
                     }
                     
+                    if (copyright && handler.unlockManager) {
+                        handler.unlockManager.renderCopyright(post[i]);
+                    }
                 }
             }
             

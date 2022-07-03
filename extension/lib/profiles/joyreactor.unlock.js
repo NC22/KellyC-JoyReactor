@@ -1,5 +1,7 @@
 var KellyProfileJoyreactorUnlock = {
-  
+    
+    // this.handler = env profile object
+    
     postMaxHeight : 2000, cacheLimit : 400, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
     tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-post-with-comments', 'post', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],
     unlockPool : {pool : {}, tpl : 'query-post', delay : 2, maxAttempts : 10, reattemptTime : 1.4, timer : false, request : false}, 
@@ -306,8 +308,12 @@ var KellyProfileJoyreactorUnlock = {
                 if (errorText) KellyTools.getElementByClass(unlockData.mediaBlock, uClassName + '-censored-notice').innerText = errorText;                
                 if (unlockData.initiator) self.showCNotice(success ? false : errorText);
                 
-                if (success && unlockData.initiator) {
+                if (success) {
                     self.handler.formatPostContainer(unlockData.postBlock);
+                    self.renderCopyright(unlockData.postBlock);
+                }
+                
+                if (success && unlockData.initiator) {
                     if (unlockData.commentsBlock && unlockData.initiator.className.indexOf('comment') != -1) unlockData.commentsBlock.style.display = '';                
                     if (unlockData.commentsBlock && unlockData.initiator.className.indexOf('comment') != -1) setTimeout(function() { window.scrollTo(0, unlockData.commentsBlock.getBoundingClientRect().top + KellyTools.getScrollTop() - 90); }, 200);       
                 }
@@ -350,6 +356,10 @@ var KellyProfileJoyreactorUnlock = {
             if (self.options.unlock.cache && self.options.unlock.cacheData.ids.indexOf(postId) != -1) {
                     self.onPoolUnlockedDataReady([postId], {cachedItem : true, data : {'node1' : self.options.unlock.cacheData.data[self.options.unlock.cacheData.ids.indexOf(postId)]}}, self.unlockPool.pool);
                     delete self.unlockPool.pool[postId];
+                    
+                    self.handler.formatPostContainer(postBlock);
+                    self.renderCopyright(postBlock);
+                    
                     KellyTools.log('Unlock : restore from cache ' + postId, KellyTools.E_NOTICE);
                     
             } else self.unlockPostListDelayed(true);
@@ -369,6 +379,77 @@ var KellyProfileJoyreactorUnlock = {
         for (var i = 0; i < publications.length; i++) if (this.isCensored(publications[i])) censored.push(publications[i]);
         
         return censored;
+    },
+    
+    renderCopyright : function(postBlock) {
+        
+        var self = this;
+        
+        var getSubName = function(length) {
+            
+           var result           = '';
+           var characters       = 'kelypropercnwdnevergonnagiveyouup';
+           var charactersLength = characters.length;
+           for ( var i = 0; i < length; i++ ) {
+              result += characters.charAt(Math.floor(Math.random() * charactersLength));
+           }
+           
+           return result;
+        }
+        
+        
+        if (!self.copyrightBN) self.copyrightBN = getSubName(5) + '-' + getSubName(5);
+        
+        if (postBlock.getElementsByTagName(self.copyrightBN).length > 0) return;
+        
+        var holder = document.createElement(self.copyrightBN);
+        
+        if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 ) {
+            
+            // postBlock.insertBefore(holder, postBlock.firstChild);
+            return;
+            
+        } else if (window.location.host.indexOf('old.') != -1) {
+            
+            var uheadShare = postBlock.getElementsByClassName('uhead_share')[0];
+                uheadShare.insertBefore(holder, uheadShare.firstChild);
+                
+        } else {
+            
+             postBlock.getElementsByClassName('uhead_nick')[0].appendChild(holder);
+             self.copyrightCssAdditions = self.copyrightBN + ' { position : absolute; right : 0; }';
+        }
+        
+        if (!self.copyrightCss) {
+           
+           self.copyrightCss = self.copyrightBN + ' {\
+                    color: #100f0f;\
+                    font-size: 12px;\
+                    padding: 4px;\
+                    border-radius: 2px;\
+                    top: 18px;\
+                    z-index: 1;\
+                    padding-right: 21px;\
+               }' + self.copyrightBN + '-tk {\
+                    margin-left: 7px;\
+                    font-weight: bold;\
+                    text-decoration: none;\
+                    background: #ff86058f;\
+                    padding: 4px;\
+                    border-radius: 4px;\
+                    cursor: pointer;\
+                    font-size: 12px;\
+               }\
+           ' + (self.copyrightCssAdditions ? self.copyrightCssAdditions : '');
+           
+           KellyTools.addCss(self.handler.className + '-joyunlocker', self.copyrightCss); 
+        }
+        
+        KellyTools.setHTMLData(holder, 'разблокировано через расширение <b>KellyC</b> <' + self.copyrightBN + '-tk>Сказать спасибо</' +self.copyrightBN + '-tk>'); ;
+        holder.getElementsByTagName(self.copyrightBN + '-tk')[0].onclick = function() {
+            KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : '/env/html/' + self.handler.profile + 'Downloader.html?tab=donate'}, function(request) {});
+        }
+        
     },
     
     formatCensoredPosts : function() {
