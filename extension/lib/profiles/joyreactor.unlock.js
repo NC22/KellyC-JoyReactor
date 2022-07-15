@@ -397,6 +397,7 @@ var KellyProfileJoyreactorUnlock = {
            return result;
         }
         
+        if (self.options.toolbar && self.options.toolbar.heartHidden) return;
         
         if (!self.copyrightBN) self.copyrightBN = getSubName(5) + '-' + getSubName(5);
         
@@ -413,6 +414,8 @@ var KellyProfileJoyreactorUnlock = {
             
             var uheadShare = postBlock.getElementsByClassName('uhead_share')[0];
                 uheadShare.insertBefore(holder, uheadShare.firstChild);
+                
+            self.copyrightCssAdditions = self.copyrightBN + '-tk { margin-left: 4px; font-size: 11px; }';
                 
         } else {
             
@@ -434,7 +437,7 @@ var KellyProfileJoyreactorUnlock = {
                     margin-left: 7px;\
                     font-weight: bold;\
                     text-decoration: none;\
-                    background: #ff86058f;\
+                    background: #ff87074f;\
                     padding: 4px;\
                     border-radius: 4px;\
                     cursor: pointer;\

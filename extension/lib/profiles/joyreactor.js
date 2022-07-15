@@ -592,7 +592,19 @@ function KellyProfileJoyreactor() {
                     }
                 }
             }    
-        }        
+        }       
+
+        /*
+        if (postBlock.id && postBlock.innerHTML.indexOf('/user/%D0%A0%D0%B0%D0%B4%D0%B8%D0%BE%D0%B2%D0%BE%D0%BB%D0%BD%D0%B0') != -1 && !document.getElementById(handler.className + '-n-copyright-' + postBlock.id)) {
+            var postContent = postBlock.querySelector(handler.location.host == 'old.reactor.cc' ? '.post_content' : '.post_content > div');
+            if (postContent && !postContent.querySelector('a:not([class])')) {
+                postContent.appendChild(KellyTools.setHTMLData(
+                    document.createElement('p'), 
+                    '<a style="padding-top: 12px;display: block; padding-bottom: 6px;" href="https://nradiowave.ru/?kellyc=1" target="_blank" id="' + handler.className + '-n-copyright-'+ postBlock.id+'">Автор, архивы рисунков</a>'
+                ));
+            }
+        }
+        */
         
         if (coptions.hideAddToFav) return false;
         updateAddToFavButton(postBlock, shareButtonsBlock, coptions.addToFavSide);
@@ -718,7 +730,7 @@ function KellyProfileJoyreactor() {
             var filename = KellyTools.getUrlFileName(url, false, true);
             if (!filename) return url;
             
-            if (format) filename = filename.split('.')[0] + '.' + format;
+            if (format) filename = filename.split('.')[0] + '.' + format;            
             
             var type = url.indexOf('comment') == -1 ? 'post' : 'comment';                 
             var animationFormat = format && ['mp4', 'webm'].indexOf(format) != -1;
@@ -726,6 +738,7 @@ function KellyProfileJoyreactor() {
             
                  if (handler.location.domain == 'reactor.cc') host = 'reactor.cc'; // prevent 301 redirect in fandoms for media requests
             else if (host == 'top.joyreactor.cc' || host == 'm.joyreactor.cc' || host == 'm.reactor.cc') host = 'joyreactor.cc';
+            else if (handler.location.domain.indexOf('proxy') != -1) host = 'joyreactor.cc';
             
             url  = handler.location.protocol + '//' + imgServer[0] + '.' + host + '/pics/' + type + '/';
             url += (animationFormat ? format + '/' : '') + (!animationFormat && full ? 'full/' : '') + filename;

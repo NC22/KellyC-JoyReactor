@@ -142,7 +142,7 @@ var KellyProfileTopJoyreactor = new Object();
                         var posts = false;
                         try {
                             
-                            console.log(e.data.eventDataIn);
+                            // console.log(e.data.eventDataIn);
                             
                             if (Object.prototype.toString.call(e.data.eventDataIn.responseJson) === '[object Array]') {
                                 
@@ -377,6 +377,19 @@ var KellyProfileTopJoyreactor = new Object();
             var fastSave = handler.fav.getFastSave();                         
                 fastSave.showFastSaveButton(postBlock, buttonsBlock, coptions.fastsave.enabled, false, handler.className);   
                 fastSave.showFastSaveButton(postBlock, buttonsBlock, coptions.fastsave.configurableEnabled, true, handler.className);  
+            
+            /*
+            var postId = postBlock.querySelector('.kelly-post-id');
+            if (postId && postBlock.innerHTML.indexOf('/user/%D0%A0%D0%B0%D0%B4%D0%B8%D0%BE%D0%B2%D0%BE%D0%BB%D0%BD%D0%B0') != -1 && !postBlock.querySelector('#' + handler.className + '-n-copyright-' + postId.getAttribute('data-id'))) {
+                var postContent = postBlock.querySelector('.post-content > div > div');
+                if (postContent && !postContent.querySelector('a:not([class])')) {
+                    postContent.appendChild(KellyTools.setHTMLData(
+                        document.createElement('p'), 
+                        '<a style="padding-top: 12px;display: block; padding-bottom: 6px;" href="https://nradiowave.ru/?kellyc=1" target="_blank" id="' + handler.className + '-n-copyright-'+ postId.getAttribute('data-id')+'">Автор, архивы рисунков</a>'
+                    ));
+                }
+            }
+            */
             
             if (!coptions.hideAddToFav) {
                 
