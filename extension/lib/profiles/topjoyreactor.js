@@ -333,6 +333,9 @@ var KellyProfileTopJoyreactor = new Object();
             for (var i = 0; i < imagesEl.length; i++) {
                  
                 var imageLink = imagesEl[i].getAttribute("src");
+                
+                if (imageLink.indexOf('data:') === 0) continue;
+                
                 if (imageLink.indexOf('static/') != -1) {
                     imageLink = imageLink.replace('static/', '');
                     imageLink = imageLink.substr(0, imageLink.lastIndexOf('.')) + '.gif';
