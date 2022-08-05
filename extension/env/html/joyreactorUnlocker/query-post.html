@@ -1,6 +1,9 @@
 ... on Post {
     rating,
     text,
+    blogs {
+        tag, name, id
+    },
     createdAt,
     attributes {
         ... on AttributeEmbed {id, type, value, image { type }} 

@@ -11,7 +11,29 @@ var KellyProfileJoyreactorUnlock = {
         return window.atob(data).split(':')[1];                 
     },
     
-    getPublicationAttributesHtml : function(data, htmlContext, isComment) {
+    getUrlNamePrefix : function(blogs) {
+        
+        if (blogs) {
+            
+            var limit = 3, current = 0;
+            var url = '';
+            
+            for (var blogIndex in blogs) {
+                
+                if (!blogs[blogIndex].tag) continue;
+                
+                url += (url ? '-' : '') + encodeURI(blogs[blogIndex].tag.replace(/[^а-яА-Яa-zA-Z0-9]/g,'-'));
+                
+                current++;
+                if (current >= limit) break;
+                               
+            }
+        }
+        
+        return url ? url + '-' : 'post-';
+    },
+    
+    getPublicationAttributesHtml : function(data, htmlContext, isComment, urlPrefix) {
         var html = '', type = isComment ? 'comment' : 'post', self = this;
         if (!data) return html;
         
@@ -22,7 +44,7 @@ var KellyProfileJoyreactorUnlock = {
             if (attributeData.type != 'PICTURE') {
                 if (['YOUTUBE', 'COUB'].indexOf(attributeData.type) != -1)  itemHtml = self.getTpl('att-' + attributeData.type.toLowerCase(), { VALUE : attributeData.value});
             } else {                
-                var src = "//img10.joyreactor.cc/pics/" + type + '/post-' + self.getNodeId(attributeData.id) + '.' + attributeData.image.type.toLowerCase();
+                var src = "//img10.joyreactor.cc/pics/" + type + '/' + urlPrefix + self.getNodeId(attributeData.id) + '.' + attributeData.image.type.toLowerCase();
                 itemHtml = self.getTpl('att-image', { POSTURL_PREVIEW : src, POSTURL_FULL : src.replace(type + '/', type + '/full/')});
             }
             
@@ -201,6 +223,11 @@ var KellyProfileJoyreactorUnlock = {
                            
             var postUnlockedData = unlockedData ? unlockedData.data['node' + (i+1)] : false, htmlComments = '', poolItem = pool[rids[i]], postId = rids[i];
             var htmlPostCommentForm = (self.authData.token ? self.getTpl('post-form-comment', { POST_ID : postId, AUTH_TOKEN : self.authData.token}) : '');
+            var urlPrefix = self.getUrlNamePrefix(postUnlockedData.blogs);
+            
+            //console.log(urlPrefix);
+            //console.log(postUnlockedData.blogs);
+            
             
             if (rids === false || !postUnlockedData) {
                 poolItem.onReady(false, 'Ошибка загрузки данных. (Повторная попытка по клику на "Комментарии")');
@@ -208,7 +235,7 @@ var KellyProfileJoyreactorUnlock = {
             }
             
             if (poolItem.mediaBlock) {
-                KellyTools.setHTMLData(poolItem.mediaBlock, self.getTpl('post', {PICS : self.getPublicationAttributesHtml(postUnlockedData.attributes, postUnlockedData.text)})); 
+                KellyTools.setHTMLData(poolItem.mediaBlock, self.getTpl('post', {PICS : self.getPublicationAttributesHtml(postUnlockedData.attributes, postUnlockedData.text, false, urlPrefix)})); 
                 self.updatePostBounds(poolItem.postBlock, poolItem.mediaBlock); 
             }
             
@@ -223,7 +250,7 @@ var KellyProfileJoyreactorUnlock = {
                         var meAuthor = KellyTools.val(self.getNodeId(comment.user.id), 'int') == self.authData.userId ? true : false;
                         
                         htmlComments += self.getTpl('comment', { 
-                            PICS : self.getPublicationAttributesHtml(comment.attributes, comment.text, true), 
+                            PICS : self.getPublicationAttributesHtml(comment.attributes, comment.text, true, urlPrefix), 
                             USER_NAME : comment.user.username, 
                             USER_ID : self.getNodeId(comment.user.id),
                             POST_ID : postId,                        
