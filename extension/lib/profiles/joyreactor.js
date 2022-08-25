@@ -19,21 +19,6 @@ function KellyProfileJoyreactor() {
         "reactorccdnf36aqvq34zbfzqyrcrpg3eyhilauovitrvmcjovsujmid.onion",
     ];
     
-    this.extLinks = {
-        
-        pp : 'https://github.com/NC22/KellyC-Image-Downloader/wiki/%5BPP%5D-Privacy-Policy',
-        github : 'https://github.com/NC22/KellyC-JoyReactor',
-        
-        install_ff : 'ff',
-        install_chrome : 'chrome',
-        install_edge : 'edge', 
-        
-        support : 'https://ko-fi.com/nradiowave',
-        discord : 'https://discord.gg/YnuFCufWQB',
-        
-        author : 'https://nradiowave.catface.ru/',
-    };
-	
     this.profile = 'joyreactor';
     this.className = 'kelly-jr-ui'; // base class for every extension container \ element
 

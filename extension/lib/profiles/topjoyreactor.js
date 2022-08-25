@@ -73,7 +73,7 @@ var KellyProfileTopJoyreactor = new Object();
         }
         
         /*
-            Replace original window.fetch method to extension one with window.postMessage callbacks 
+            Replace original window.fetch method to extension one with window.postMessage callbacks and webRequest hooks (put addition headers on low level) 
         */
         
         handler.initFetchHook = function(onReady) {
@@ -265,12 +265,19 @@ var KellyProfileTopJoyreactor = new Object();
         handler.initOnLoad = function(onLoad) {
             
             var ready = 0;
-            var addReady = function() {
-                ready += 1;
-                if (ready == 3) onLoad();
+            var addReady = function(loadStageName) {
+                         
+                ready += 1;                  
+                KellyTools.log('initOnLoad : ' + loadStageName + ' (' + ready + ')' + ' - DONE'); 
+                
+                if (ready == 3) {
+                    KellyTools.log('initOnLoad : - DONE'); 
+                
+                    onLoad();
+                }
             }
             
-            handler.initFetchHook(addReady);
+            handler.initFetchHook(function() { addReady('initFetchHook'); });
             handler.fav.load('cfg', function(fav) {
                 
                 if (fav.coptions.disabled) return;
@@ -300,22 +307,22 @@ var KellyProfileTopJoyreactor = new Object();
                     handler.events.onWebRequestReady('registerDownloader', false);
                 }, 2000);
                 
-                handler.fav.load('items', addReady);   
+                handler.fav.load('items', function() { addReady('User fav image gallery loading'); });   
             });   
                 
             if (handler.getPosts().length > 0) {
-                addReady();
+                addReady('Server side - Page ready');
             } else {
             
                 handler.observer = new MutationObserver(function(mutations) {
                     
                     if (mutations.length > 0 && document.body.querySelector('.post-card')) {
                         handler.observer.disconnect();
-                        handler.initPosts(addReady); 
+                        handler.initPosts( function() { addReady('Server side - Page ready'); } ); 
                     }                
                 });
                 
-                handler.observer.observe(document.getElementById('root'), {childList: true, subtree: true});
+                handler.observer.observe(document.documentElement, {childList: true, subtree: true});
             }
         }
         
@@ -476,7 +483,7 @@ var KellyProfileTopJoyreactor = new Object();
                        setTimeout(handler.updateSidebarConfig, 400);
                        handler.initPosts(function() {
                             
-                           KellyTools.log('New page loaded, format publications');
+                           KellyTools.log('Page updated, format publications');
                                                 
                            if (handler.fav.getGlobal('mode') == 'main') handler.fav.closeSidebar();
                            else handler.fav.hideFavoritesBlock();

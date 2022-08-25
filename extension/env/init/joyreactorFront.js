@@ -39,7 +39,8 @@ if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === windo
         onDOMRendered();
         
     } else { // "run_at": "document_start"
-  
+        
+        
         if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 ) {
             
             var bodyObserver = new MutationObserver(function(mutations) {    
