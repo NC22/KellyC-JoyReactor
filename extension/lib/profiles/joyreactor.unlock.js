@@ -20,9 +20,9 @@ var KellyProfileJoyreactorUnlock = {
             
             for (var tIndex in tags) {
                 
-                if (!tags[tIndex].tag) continue;
+                if (!tags[tIndex].seoName) continue;
                 
-                url += (url ? '-' : '') + encodeURI(tags[tIndex].tag.replace(/[^а-яА-Яa-zA-Z0-9]/g,'-'));
+                url += (url ? '-' : '') + encodeURI(tags[tIndex].seoName.replace(/[^а-яА-Яa-zA-Z0-9]/g,'-'));
                 
                 current++;
                 if (current >= limit) break;
