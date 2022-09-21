@@ -722,7 +722,7 @@ function KellyProfileJoyreactor() {
             var host = handler.location.host;
             
                  if (handler.location.domain == 'reactor.cc') host = 'reactor.cc'; // prevent 301 redirect in fandoms for media requests
-            else if (host == 'top.joyreactor.cc' || host == 'm.joyreactor.cc' || host == 'm.reactor.cc') host = 'joyreactor.cc';
+            else if (host == 'top.joyreactor.cc' || host == 'm.joyreactor.cc' || host == 'm.reactor.cc' || host == 'safereactor.cc' || host == 'cookreactor.com') host = 'joyreactor.cc';
             else if (handler.location.domain.indexOf('proxy') != -1) host = 'joyreactor.cc';
             
             url  = handler.location.protocol + '//' + imgServer[0] + '.' + host + '/pics/' + type + '/';
@@ -798,7 +798,7 @@ function KellyProfileJoyreactor() {
             var urlParts = url[0].split('/');
             if (urlParts.length - 1 >= 2) {
                 return {
-                    contentName : KellyTools.getUrlFileName(urlParts[urlParts.length-2]),
+                    contentName : decodeURIComponent(urlParts[urlParts.length-2]).replace(/[_ +.-]/gim, '_').replace(/[^а-яА-Яa-z0-9_]/gim, ""),
                     number : KellyTools.val(urlParts[urlParts.length-1], 'int'), 
                     tpl : url[0].substr(0, url[0].lastIndexOf('/')) + '/__PAGENUMBER__' + (url.length > 1 ? '?' + url[1] : '')
                 };
@@ -820,6 +820,7 @@ function KellyProfileJoyreactor() {
             }
         }
         
+        console.log(pageUrlInfo);
         if (info.url === false) info.url = handler.location.href;
         
         info.items = info.pages * 10;       

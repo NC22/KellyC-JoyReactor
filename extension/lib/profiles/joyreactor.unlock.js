@@ -11,18 +11,18 @@ var KellyProfileJoyreactorUnlock = {
         return window.atob(data).split(':')[1];                 
     },
     
-    getUrlNamePrefix : function(blogs) {
+    getUrlNamePrefix : function(tags) {
         
-        if (blogs) {
+        if (tags) {
             
             var limit = 3, current = 0;
             var url = '';
             
-            for (var blogIndex in blogs) {
+            for (var tIndex in tags) {
                 
-                if (!blogs[blogIndex].tag) continue;
+                if (!tags[tIndex].tag) continue;
                 
-                url += (url ? '-' : '') + encodeURI(blogs[blogIndex].tag.replace(/[^а-яА-Яa-zA-Z0-9]/g,'-'));
+                url += (url ? '-' : '') + encodeURI(tags[tIndex].tag.replace(/[^а-яА-Яa-zA-Z0-9]/g,'-'));
                 
                 current++;
                 if (current >= limit) break;
@@ -223,7 +223,7 @@ var KellyProfileJoyreactorUnlock = {
                            
             var postUnlockedData = unlockedData ? unlockedData.data['node' + (i+1)] : false, htmlComments = '', poolItem = pool[rids[i]], postId = rids[i];
             var htmlPostCommentForm = (self.authData.token ? self.getTpl('post-form-comment', { POST_ID : postId, AUTH_TOKEN : self.authData.token}) : '');
-            var urlPrefix = self.getUrlNamePrefix(postUnlockedData.blogs);
+            var urlPrefix = self.getUrlNamePrefix(postUnlockedData.tags);
             
             //console.log(urlPrefix);
             //console.log(postUnlockedData.blogs);

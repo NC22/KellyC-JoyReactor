@@ -4,7 +4,11 @@ if ((typeof K_FAV == 'undefined' || K_FAV === null) && window.location === windo
     
     var onDOMRendered = function() {
         
-        if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 ) { // new new design, based on GraphQL API
+        if (window.location.host.indexOf('top.joyreactor.cc') != -1 ||
+            window.location.host.indexOf('m.joyreactor.cc') != -1 ||
+            window.location.host.indexOf('safereactor.cc') != -1 || 
+            window.location.host.indexOf('cookreactor.com') != -1 || 
+            window.location.host.indexOf('m.reactor.cc') != -1 ) { // new new design, based on GraphQL API
             
             K_FAV = new KellyFavItems({env : KellyProfileTopJoyreactor.getInstance(), location : window.location, allowMobile : true});
             KellyProfileTopJoyreactor.getInstance().initOnLoad(K_FAV.initFormatPage); // init hooks before joyreactor page, wait until joyreator page will load post list
