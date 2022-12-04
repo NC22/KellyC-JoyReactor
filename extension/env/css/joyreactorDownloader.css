@@ -21,6 +21,10 @@
     cursor: pointer;
 }
 
+.jr-downloader .__BASECLASS__-tagviewer-pagination-bottom {
+    margin-bottom : 120px;
+}
+
 .__BASECLASS__-tooltipster-content input.__BASECLASS__TagName{
     margin-bottom : 6px;
 }

@@ -15,6 +15,11 @@ var KellyProfileTopJoyreactor = new Object();
         handler.events.onPageReadyOrig = handler.events.onPageReady;
         handler.events.onExtensionReady = function() {
            
+            if (handler.unlockManager) {                
+                handler.unlockManager.initTagViewer();
+                handler.unlockManager.tagViewer.openInCurrentTab = false; // need to add post-maket tpl special for m. html publications structure before
+            }
+            
             setTimeout(handler.updateSidebarConfig, 400);
         };
         

@@ -9,11 +9,16 @@ var KellyProfileJoyreactorUnlock = {
     tagViewer : {
         navigation : [] /* todo - last 10 visited tags, filter by posts type, short info in tag header */, 
         
+        typeNames : {'GOOD' : 'Хорошее', 'NEW' : 'Новое', 'BEST' : 'Лучшее', 'ALL' : 'Бездна'},
+        
         page : 1, // current selected page in pager
         perPage : 20, 
         
         tagData : false, // last loaded tag data
         type : 'GOOD', // current pager listing type
+        
+        openInNewTab : true,
+        openInCurrentTab : true,
         
         maxAttempts : 4,
         reattemptTime : 1.4, 
@@ -108,7 +113,14 @@ var KellyProfileJoyreactorUnlock = {
             else html += itemHtml;            
         });
         
-        return htmlContext + html;
+        var resultHtml = htmlContext + html;
+        
+        if (resultHtml.indexOf('attribute_insert_') != -1) {
+            
+            resultHtml += '<b>Ошибка чтения. Возможно часть контента была вырезана администрацией полностю :(</b>';
+        }
+            
+        return resultHtml;
     },            
     
     getTpl(tplName, data) {
@@ -595,8 +607,15 @@ var KellyProfileJoyreactorUnlock = {
     },
     
     loadTag : function(tagName, newPage, onload){
-               
+            
         var query = "", self = KellyProfileJoyreactorUnlock;
+           
+        if (self.tagViewerRequestController) {
+            setTimeout(function() {self.showCNotice('Загрузка прервана');}, 300);
+            self.tagViewerRequestController.abort();
+            self.tagViewerRequestController = false;
+            return false;
+        }
         
         self.tagViewer.tagName = tagName;
         
@@ -610,7 +629,7 @@ var KellyProfileJoyreactorUnlock = {
         
         if (self.tagViewer.page <= 0) self.tagViewer.page = 1;
         
-        if (['GOOD', 'NEW', 'BEST'].indexOf(self.tagViewer.type) == -1) {
+        if (['GOOD', 'NEW', 'BEST', 'ALL'].indexOf(self.tagViewer.type) == -1) {
             console.log('Unknown pager type ' + self.tagViewer.type );
             self.tagViewer.type = 'GOOD';
         }
@@ -624,8 +643,8 @@ var KellyProfileJoyreactorUnlock = {
                     container : KellyTools.getElementByClass(document, elCl), 
                     curPage : self.tagViewer.page, 
                     onGoTo : function(newPage) {
-                        self.showCNotice('Загружаю страницу...');
                         self.loadTag(tagName, newPage, self.tagViewer.afterPageLoad);
+                        self.showCNotice('Тег [<b>' + self.tagViewer.tagName + '</b>] Загружаю страницу <b>' + self.tagViewer.page + '</b>');
                         return false;
                     }, 
                     classPrefix : self.handler.className + '-pagination',
@@ -643,7 +662,10 @@ var KellyProfileJoyreactorUnlock = {
                                     
                 if (!unlockedData || !unlockedData.data || !unlockedData.data['tagData1']) {                      
                     console.log('fail to get tag data');
-                    console.log(unlockedData);                       
+                    
+                    console.log(unlockedData); 
+                    self.tagViewerRequestController.errorText = 'Публикаций не найдено. Проверьте корректность названия тега';
+                            
                     if (onload) onload(false);
                     return false;
                 }
@@ -651,49 +673,30 @@ var KellyProfileJoyreactorUnlock = {
                 var tagData = unlockedData.data['tagData1'];
                 self.tagViewer.tagData = tagData;
                 
-                console.log(tagData);            
                 self.tagViewer.tagData.pageCount = Math.ceil(tagData.postPager.count / self.tagViewer.perPage);
                 if (newPage > self.tagViewer.tagData.pageCount) {
-                    self.tagViewerRequestController.errorText = 'Страницы не существует (' + self.tagViewer.tagData.pageCount + ' - всего страниц, элементов ' + tagData.postPager.count + ')';
-                    if (onload) onload(false);
-                    return false;
-                }
-                
-                var pageHtml = '';
-                for (var i = 0; i < tagData.postPager.posts.length; i++) {
                     
-                    var post = tagData.postPager.posts[i];
-                    var datetime = new Date(post.createdAt);
-                    var tagsHtml = '';
-                    for (var b = 0; b < post.tags.length; b++) {
-                        tagsHtml += '<a href="/tag/' + encodeURI(post.tags[b].name) + '" data-tag="' + post.tags[b].name + '" class="' + self.handler.className + '-tag-goto">' + post.tags[b].seoName + '</a>&nbsp;';
+                    if (tagData.postPager.count == 0) {
+                    
+                        // self.tagViewerRequestController.errorText = 'Публикаций в категории <b>' + self.tagViewer.typeNames[self.tagViewer.type] + '</b> нет';
+                    
+                    } else {
+                    
+                        self.tagViewerRequestController.errorText = 'Страницы не существует (' + self.tagViewer.tagData.pageCount + ' - всего страниц, элементов ' + tagData.postPager.count + ')';
+                        
+                        if (onload) onload(false);
+                        return false;
                     }
                     
-                    pageHtml += self.getTpl('post-maket', {
-                        PROTOCOL : self.handler.hostClass == 'options_page' ? 'https:' : '',
-                        USER_NAME : post.user.username, 
-                        USER_ID : self.getNodeId(post.user.id),
-                        POST_ID : self.getNodeId(post.id),
-                        DATE : self.getFormatedDate(datetime),
-                        COMMENTS_COUNT : post.commentsCount,
-                        TAGS : tagsHtml,
-                        TIME : KellyTools.getTime(datetime),
-                    });
                 }
-                 
-                 var postList = document.getElementById('post_list'); // main host
-                 if (!postList) {
-                     postList = document.createElement('DIV');
+             
+                 var postList = document.createElement('DIV');
                      postList.id = 'post_list';
-                     self.handler.getMainContainers().siteContent.innerHTML = '';
-                     self.handler.getMainContainers().siteContent.appendChild(postList);
-                 }
-                 
-                 postList.classList.add(self.handler.hostClass);
                      
-                 var origPagination = document.getElementById('Pagination');
-                 if (origPagination) origPagination.style.display = 'none';
-                 
+                 self.handler.getMainContainers().siteContent.innerHTML = '';
+                 self.handler.getMainContainers().siteContent.appendChild(postList);
+                 postList.classList.add(self.handler.hostClass);
+
                  var tagStatsHtml = '<div class="' + self.handler.className + '-tagviewer-tagStats">\
                                     <h2>' + tagName + '</h2>\
                                     <p><span><b>Тег отображается без дополнительной фильтрации NSFW и исключений</b></p>\
@@ -701,42 +704,78 @@ var KellyProfileJoyreactorUnlock = {
                                     <p class="' + self.handler.className + '-tagviewer-pagerTypes">\
                                         <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'BEST' ? 'selected' : '') + '" href="#" data-type="BEST">Лучшее</a>\
                                         <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'GOOD' ? 'selected' : '') + '" href="#" data-type="GOOD">Хорошее</a>\
-                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'NEW' ? 'selected' : '') + '" href="#" data-type="NEW">Все</a>\
+                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'NEW' ? 'selected' : '') + '" href="#" data-type="NEW">Новое</a>\
+                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'ALL' ? 'selected' : '') + '" href="#" data-type="ALL">Бездна</a>\
                                      </p>\
                                 </div>';
+                           
+
+                 if (tagData.postPager.posts.length == 0) {
+                          
+                     KellyTools.setHTMLData(postList, tagStatsHtml + '<p>Публикаций в категории <b>' + self.tagViewer.typeNames[self.tagViewer.type] + '</b> нет</p>');
+                           
+                 } else {    
                  
-                 pageHtml = '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-top"></div>' + pageHtml + '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-bottom"></div>';
-                 
-                 KellyTools.setHTMLData(postList, tagStatsHtml + pageHtml);
-                       
-                 for (var i = 0; i < tagData.postPager.posts.length; i++) {
-                    
-                    var postBlock = document.getElementById('postContainer' + self.getNodeId(tagData.postPager.posts[i].id));
-                    self.formatCensoredPost(postBlock, tagData.postPager.posts[i]);
-                 }
-                 
-                 var tags = document.getElementsByClassName(self.handler.className + '-tag-goto');
-                 for (var i = 0; i < tags.length; i++) {
-                    tags[i].onclick = function() {
-                        self.showCNotice('Открываю тег ' + this.getAttribute('data-tag') + '...');
-                        self.loadTag(this.getAttribute('data-tag'), 1, self.tagViewer.afterPageLoad);
-                        return false;
+                    var pageHtml = ''; var defaultUrl = self.handler.hostClass == 'options_page' ? 'https://joyreactor.cc' : '';
+                    for (var i = 0; i < tagData.postPager.posts.length; i++) {
+                        
+                        var post = tagData.postPager.posts[i];
+                        var datetime = new Date(post.createdAt);
+                        var tagsHtml = '';
+                        for (var b = 0; b < post.tags.length; b++) {
+                            tagsHtml += '<a href="' + defaultUrl + '/tag/' + encodeURI(post.tags[b].name) + '" data-tag="' + post.tags[b].name + '" class="' + self.handler.className + '-tag-goto">' + post.tags[b].seoName + '</a>&nbsp;';
+                        }
+                        
+                        pageHtml += self.getTpl('post-maket', {
+                            PROTOCOL : self.handler.hostClass == 'options_page' ? 'https:' : '',
+                            DEFAULT_URL : defaultUrl,
+                            USER_NAME : post.user.username, 
+                            USER_ID : self.getNodeId(post.user.id),
+                            POST_ID : self.getNodeId(post.id),
+                            DATE : self.getFormatedDate(datetime),
+                            COMMENTS_COUNT : post.commentsCount,
+                            TAGS : tagsHtml,
+                            TIME : KellyTools.getTime(datetime),
+                        });
                     }
+                                 
+                     pageHtml = '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-top"></div>' + pageHtml + '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-bottom"></div>';
+                                                
+                     KellyTools.setHTMLData(postList, tagStatsHtml + pageHtml);
+                           
+                     for (var i = 0; i < tagData.postPager.posts.length; i++) {
+                        
+                        var postBlock = document.getElementById('postContainer' + self.getNodeId(tagData.postPager.posts[i].id));
+                        self.formatCensoredPost(postBlock, tagData.postPager.posts[i]);
+                     }
+                     
+                     var tags = document.getElementsByClassName(self.handler.className + '-tag-goto');
+                     for (var i = 0; i < tags.length; i++) {
+                        tags[i].onclick = function() {
+                            self.showCNotice('Открываю тег [<b>' + this.getAttribute('data-tag') + '</b>]');
+                            self.loadTag(this.getAttribute('data-tag'), 1, self.tagViewer.afterPageLoad);
+                            return false;
+                        }
+                     }
+                     
+                    addPagination(self.handler.className + '-tagviewer-pagination-top');
+                    addPagination(self.handler.className + '-tagviewer-pagination-bottom');
+               
                  }
-                 
+      
                  var types = document.getElementsByClassName(self.handler.className + '-tagviewer-pagerType');
                  for (var i = 0; i < types.length; i++) {
                     types[i].onclick = function() {
                         self.tagViewer.type = this.getAttribute('data-type');
-                        self.showCNotice('Открываю тег ' + self.tagViewer.tagName + ' (' + this.getAttribute('data-type') + ')...');
+                        self.showCNotice('Открываю тег ' + self.tagViewer.tagName + ' (' + self.tagViewer.typeNames[self.tagViewer.type] + ')...');
                         self.loadTag(self.tagViewer.tagName, 1, self.tagViewer.afterPageLoad);
                         return false;
                     }
                  }
-                addPagination(self.handler.className + '-tagviewer-pagination-top');
-                addPagination(self.handler.className + '-tagviewer-pagination-bottom');
-                
+                     
                 onload(unlockedData, postList);
+                
+                
             };
             self.tagViewerRequestController.request(query);
     },
@@ -779,6 +818,7 @@ var KellyProfileJoyreactorUnlock = {
                 }
             }
             
+            var tagUrl = 'https://joyreactor.cc/tag/' + encodeURIComponent(tagName ? tagName : self.options.unlock.lastTv);
             var html = '\
                 <div class="' + self.handler.className + 'TagViewerForm">\
                     <div>\
@@ -786,8 +826,8 @@ var KellyProfileJoyreactorUnlock = {
                         <p><input type="text" placeholder="Тег" class="' + self.handler.className + 'TagName" value="' + (tagName ? tagName : self.options.unlock.lastTv)  + '">\
                            <input type="text" placeholder="Страница" value="" class="' + self.handler.className + 'TagPage"></p>\
                         <p>\
-                            <a href="#" class="' + self.handler.className + 'TagOpen">Открыть</a>&nbsp;&nbsp;\
-                            ' + (self.handler.hostClass != 'options_page' ? '<a href="#" class="' + self.handler.className + 'TagViewInExt">В новом окне</a>' : '') + '</p>\
+                            ' + ( self.tagViewer.openInCurrentTab ? '<a href="' + tagUrl + '" class="' + self.handler.className + 'TagOpen">Открыть</a>' : '') + '&nbsp;&nbsp;\
+                            ' + ( self.tagViewer.openInNewTab ? '<a href="' + tagUrl + '" class="' + self.handler.className + 'TagViewInExt">В новом окне</a>' : '') + '</p>\
                         \
                         <p class="' + self.handler.className + 'TagViewerState"></p>\
                     </div>\
@@ -844,7 +884,7 @@ var KellyProfileJoyreactorUnlock = {
                 var urlTagName = e.target.href.split('/tag')[1];
                     urlTagName = urlTagName.split('/')[1];
                     
-                if (urlTagName) urlTagName = decodeURIComponent(urlTagName).replace(/[_ +.-]/gim, ' '); // .replace(/[^а-яА-Яa-z0-9 _]/gim, "")
+                if (urlTagName) urlTagName = decodeURIComponent(urlTagName).replace(/[ +]/gim, ' '); // .replace(/[^а-яА-Яa-z0-9 _]/gim, "")
                 
                 self.showTagViewerTooltip(urlTagName, e.target);
                 
@@ -991,10 +1031,14 @@ var KellyProfileJoyreactorUnlock = {
         var tooltip = this.handler.fav.getTooltip();
         if (!text) tooltip.show(false);
         else {
-            tooltip.resetToDefaultOptions();
-            tooltip.updateCfg({closeButton : false, closeByBody : true});
-            tooltip.setMessage(text);    
-            tooltip.show(true);
+            if (tooltip.isShown()) {
+                tooltip.setMessage(text);    
+            } else {
+                tooltip.resetToDefaultOptions();
+                tooltip.updateCfg({closeButton : false, closeByBody : true});
+                tooltip.setMessage(text);    
+                tooltip.show(true);
+            }
         } 
         return false;
     }

@@ -19,6 +19,7 @@ KellyJoyreactorDPage.init = function() {
         var unlockManager = KellyProfileJoyreactor.getInstance().unlockManager;
         if (unlockManager) {
             unlockManager.initTagViewer();
+            unlockManager.tagViewer.openInNewTab = false;
             
             K_WATCHDOG = new KellyPageWatchdog();
             K_WATCHDOG.observerLocation = false;
@@ -36,7 +37,7 @@ KellyJoyreactorDPage.init = function() {
                     
                     unlockManager.initWorkspace(function() {
                         
-                        unlockManager.showCNotice('Загружаю страницу...');
+                        unlockManager.showCNotice('Открываю тег [<b>' + request.tabData.formData.tagName + '</b>]');
                         unlockManager.loadTag(request.tabData.formData.tagName, request.tabData.formData.page, unlockManager.tagViewer.afterPageLoad);
                     });
                 }
