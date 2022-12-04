@@ -102,7 +102,7 @@ function KellyProfileJoyreactor() {
     
     this.getMainContainers = function() {
         
-        // todo move create buttons methods from faitems core
+        // [NOTICE] same containers used for joyreactorDownloader.html currently, split if edit something, check by hostClass == 'options_page' for ex.
         
         if (!handler.mContainers) {
             handler.mContainers = {
@@ -171,7 +171,11 @@ function KellyProfileJoyreactor() {
         
         onExtensionReady : function() {
             
-            if (handler.unlockManager) handler.unlockManager.formatCensoredPosts();
+            if (handler.unlockManager) {                
+                handler.unlockManager.initTagViewer();
+                handler.unlockManager.formatCensoredPosts();
+            }
+            
             if (document.getElementById('post_list')) {
                                 
                 handler.observer = new MutationObserver(function(mutations) {
@@ -257,9 +261,9 @@ function KellyProfileJoyreactor() {
         onSideBarUpdate : updateSidebarPosition,
         onCreateMenuItem : function(submenu, menuButtonContainer, menuButtonA) {
             
-            var menuButtonTest = KellyTools.getElementByTag(submenu, 'a'); // change subcontainer for /search pages
+            var menuButtonTest = submenu.getElementsByTagName('A')[0]; // change subcontainer for /search pages
             if (menuButtonTest && menuButtonTest.getAttribute('rel') == 'v:url') menuButtonTest.parentNode.parentNode.appendChild(menuButtonContainer);
-            
+         
             var br = KellyTools.getElementByTag(submenu, 'br'); // hide br element for /disscusion/my pages
             if (br) br.style.display = 'none';
             

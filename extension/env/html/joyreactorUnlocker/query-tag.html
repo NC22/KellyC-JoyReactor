@@ -1,0 +1,14 @@
+... on Tag {
+
+    name, seoName, unsafe, nsfw, postPager(type:__TYPE__, favoriteType:null) {
+
+        id, count, posts(offset: __OFFSET__) {
+        
+            __QUERY_POST__
+            
+        }
+
+    } 
+    
+}
+     

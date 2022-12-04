@@ -1,6 +1,11 @@
 ... on Post {
+    id,
     rating,
     text,
+    commentsCount,
+    user {
+        id, username
+    },
     tags {
         name, seoName, id
     },

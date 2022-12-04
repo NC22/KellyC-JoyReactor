@@ -1,7 +1,11 @@
 ... on Post {
+    id,
     rating,
     text,
     createdAt,
+    user {
+        id, username
+    },
     comments { 
         level, parent {id}, createdAt, rating, user {id, username}, id, text, 
         attributes {

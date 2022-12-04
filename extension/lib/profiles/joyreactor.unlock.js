@@ -3,12 +3,61 @@ var KellyProfileJoyreactorUnlock = {
     // this.handler = env profile object
     
     postMaxHeight : 2000, cacheLimit : 400, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
-    tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-post-with-comments', 'post', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],
+    tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],
     unlockPool : {pool : {}, tpl : 'query-post', delay : 2, maxAttempts : 10, reattemptTime : 1.4, timer : false, request : false}, 
     authData : {token : false}, initEvents : [],
+    tagViewer : {
+        navigation : [] /* todo - last 10 visited tags, filter by posts type, short info in tag header */, 
+        
+        page : 1, // current selected page in pager
+        perPage : 20, 
+        
+        tagData : false, // last loaded tag data
+        type : 'GOOD', // current pager listing type
+        
+        maxAttempts : 4,
+        reattemptTime : 1.4, 
+        
+        afterPageLoad : function(unlockedData, postList, topMenuNotice) {
+            
+            
+            var self = KellyProfileJoyreactorUnlock;
+                self.showCNotice(false);
+                
+            if (!self.tagViewerRequestController.errorText) {
+                self.tagViewerRequestController.errorText = 'нет подробностей';
+            }
+            
+            if (topMenuNotice) {
+                
+                if (!unlockedData) {
+                    
+                    topMenuNotice.innerText = 'Ошибка загрузки : ' + self.tagViewerRequestController.errorText;
+                    
+                } else {
+                    
+                    // topMenuNotice.innerText = 'Загружено. Всего элементов ' + unlockedData.data['tagData1'].postPager.count + ' | Страниц - ' + Math.ceil(unlockedData.data['tagData1'].postPager.count / self.tagViewer.perPage);
+                    self.tagViewerTooltip.show(false);
+                    self.handler.fav.hideFavoritesBlock();                        
+                }
+                
+            } else {
+                
+                if (!unlockedData) self.showCNotice('Не удалось загрузить страницу : ' + self.tagViewerRequestController.errorText);
+                
+            }  
+            
+            if (unlockedData) setTimeout(function() { window.scrollTo(0, postList.getBoundingClientRect().top + KellyTools.getScrollTop() - 90); }, 200);  
+            self.tagViewerRequestController = false;
+    }},
     
     getNodeId : function(data) { 
         return window.atob(data).split(':')[1];                 
+    },
+    
+    getFormatedDate : function(datetime) {
+        
+        return datetime.getDate() + ' ' + ['янв.', 'фев.', 'март', 'апр.', 'май', 'июн.', 'июл.', 'авг.', 'сен.', 'окт.', 'нояб.', 'дек.'][datetime.getMonth()] + ' ' + datetime.getFullYear();
     },
     
     getUrlNamePrefix : function(tags) {
@@ -34,6 +83,9 @@ var KellyProfileJoyreactorUnlock = {
     },
     
     getPublicationAttributesHtml : function(data, htmlContext, isComment, urlPrefix) {
+        
+        if (!urlPrefix) urlPrefix = 'postnun-';
+        
         var html = '', type = isComment ? 'comment' : 'post', self = this;
         if (!data) return html;
         
@@ -43,9 +95,13 @@ var KellyProfileJoyreactorUnlock = {
             var itemHtml = ''; itemN++;
             if (attributeData.type != 'PICTURE') {
                 if (['YOUTUBE', 'COUB'].indexOf(attributeData.type) != -1)  itemHtml = self.getTpl('att-' + attributeData.type.toLowerCase(), { VALUE : attributeData.value});
-            } else {                
-                var src = "//img10.joyreactor.cc/pics/" + type + '/' + urlPrefix + self.getNodeId(attributeData.id) + '.' + attributeData.image.type.toLowerCase();
-                itemHtml = self.getTpl('att-image', { POSTURL_PREVIEW : src, POSTURL_FULL : src.replace(type + '/', type + '/full/')});
+            } else {     
+            
+                var src = "//img10.joyreactor.cc/pics/" + type + '/' + urlPrefix + self.getNodeId(attributeData.id) + '.' + attributeData.image.type.toLowerCase();                
+                if (self.handler.hostClass == 'options_page') src = 'https:' + src;
+                // if (!attributeData.image) attributeData.image = attributeData.image = {width : '', height : ''};
+                
+                itemHtml = self.getTpl('att-image', { POSTURL_PREVIEW : src, POSTURL_FULL : src.replace(type + '/', type + '/full/'), WIDTH : '' /*attributeData.image.width*/, HEIGHT : '' /*attributeData.image.height*/});
             }
             
             if (attributeHolders) htmlContext = htmlContext.replace('&attribute_insert_' + itemN + '&', itemHtml);
@@ -119,7 +175,16 @@ var KellyProfileJoyreactorUnlock = {
           var cImage = mediaContainer ? mediaContainer.getElementsByTagName('img') : [], totalHeight = 0, loaded = 0, fullList = [], self = this;          
           var postExpandBtn = KellyTools.getElementByClass(mediaContainer, 'post_content_expand');
           var postContent = KellyTools.getElementByClass(mediaContainer, 'post_content');   
-
+          
+          if (self.handler.hostClass == 'options_page') {
+              postExpandBtn.onclick = function() {
+                  postContent.classList.remove('post_content_cut');
+                  postExpandBtn.style.display = 'none';
+                  return false;
+              }
+          }
+           
+          
           if (postExpandBtn && postContent) {
               var checkOnAllLoad = function(self, error) {
                   loaded++;
@@ -155,15 +220,16 @@ var KellyProfileJoyreactorUnlock = {
           }      
     },
     
-    unlockPostList : function(ids, queryPost, callback) {
+    getUnlockController : function() {        
         
-        var query = "", self = KellyProfileJoyreactorUnlock;
-        for (var i = 0; i < ids.length; i++) query += "\\n " + "node" + (i + 1) + ":node(id : \\\"" + window.btoa('Post:' + ids[i]) + "\\\") {" + queryPost.replace(/(?:\r\n|\r|\n)/g, '') + "}";
-        
-        if (!query) return false;
-        
+        var self = KellyProfileJoyreactorUnlock;
         var unlockController = {attempts : 0};
+            unlockController.errorText = '';
+            unlockController.callback = function(){ unlockController.log('[WARNING] Default callback, no action specifed')}
             unlockController.log = function(text, eventId) { console.log (text + ' | ' + eventId); };
+            
+            unlockController.cfg = self.unlockPool;
+            
             unlockController.abort = function() {
                 if (unlockController.fetch) {
                     unlockController.fetch.abort();
@@ -174,13 +240,13 @@ var KellyProfileJoyreactorUnlock = {
                     unlockController.reattemptTimeout = false;
                 }
             }
-            unlockController.unlockRequest = function(query) {
+            unlockController.request = function(query) {
             
                 if (unlockController.fetch) return false;
                          
                 unlockController.attempts++;
                 
-                unlockController.log('Unlock post request ' + ' Attempt : ' + unlockController.attempts + '/' + self.unlockPool.maxAttempts, 'unlockRequest');
+                unlockController.log('Unlock post request ' + ' Attempt : ' + unlockController.attempts + '/' + unlockController.cfg.maxAttempts, 'unlockRequest');
                 unlockController.fetch = KellyTools.fetchRequest('https://api.joyreactor.cc/graphql?unlocker=1', {
                     method : 'POST', 
                     headers : {'Content-Type': 'application/json'},
@@ -188,31 +254,30 @@ var KellyProfileJoyreactorUnlock = {
                     responseType : 'json',
                 }, function(url, responseData, responseStatusCode, error, fetchRequest) {
                                
-                    if (error || !responseData || !responseData.data['node1']) {
+                    if (error || !responseData || !responseData.data) {
                         
+                        unlockController.errorText = error;                        
                         unlockController.fetch = false;
-                        if (unlockController.attempts < self.unlockPool.maxAttempts) {
+                        
+                        if (unlockController.attempts < unlockController.cfg.maxAttempts) {
                             
-                            unlockController.log('Bad response ' + ' Attempt : ' + unlockController.attempts + '/' + self.unlockPool.maxAttempts, 'responseError');
+                            unlockController.log('Bad response ' + ' Attempt : ' + unlockController.attempts + '/' + unlockController.cfg.maxAttempts, 'responseError');
                             unlockController.log(error, 'responseErrorInfo');
                             
-                            unlockController.reattemptTimeout = setTimeout(function() {unlockController.unlockRequest(query);}, self.unlockPool.reattemptTime * 1000);
                             
-                        } else callback(false);
+                            unlockController.reattemptTimeout = setTimeout(function() {unlockController.request(query);}, unlockController.cfg.reattemptTime * 1000);
+                            
+                        } else unlockController.callback(false);
                         
                         return false;
                     }
                     
-                    for (var i = 0; i < ids.length; i++) {
-                        
-                    }
-                    callback(ids, responseData);
+                    unlockController.callback(responseData);
                 });
             
             }
             
-            unlockController.unlockRequest(query);
-            return unlockController;       
+           return unlockController;
     },
                                     
     onPoolUnlockedDataReady : function(rids, unlockedData, pool) {
@@ -226,7 +291,7 @@ var KellyProfileJoyreactorUnlock = {
             var urlPrefix = self.getUrlNamePrefix(postUnlockedData.tags);
             
             //console.log(urlPrefix);
-            //console.log(postUnlockedData.blogs);
+            //console.log(postUnlockedData);
             
             
             if (rids === false || !postUnlockedData) {
@@ -235,7 +300,7 @@ var KellyProfileJoyreactorUnlock = {
             }
             
             if (poolItem.mediaBlock) {
-                KellyTools.setHTMLData(poolItem.mediaBlock, self.getTpl('post', {PICS : self.getPublicationAttributesHtml(postUnlockedData.attributes, postUnlockedData.text, false, urlPrefix)})); 
+                KellyTools.setHTMLData(poolItem.mediaBlock, self.getTpl('post', {PICS : self.getPublicationAttributesHtml(postUnlockedData.attributes, postUnlockedData.text, false, urlPrefix), COUNT : postUnlockedData.attributes.length})); 
                 self.updatePostBounds(poolItem.postBlock, poolItem.mediaBlock); 
             }
             
@@ -255,7 +320,7 @@ var KellyProfileJoyreactorUnlock = {
                             USER_ID : self.getNodeId(comment.user.id),
                             POST_ID : postId,                        
                             COMMENT_ID : self.getNodeId(comment.id),
-                            DATE : datetime.getDate() + ' ' + ['янв.', 'фев.', 'март', 'апр.', 'май', 'июн.', 'июл.', 'авг.', 'сен.', 'окт.', 'нояб.', 'дек.'][datetime.getMonth()] + ' ' + datetime.getFullYear(),
+                            DATE : self.getFormatedDate(datetime),
                             TIME : KellyTools.getTime(datetime),
                             VOTE : self.getVoteForm('comment-form-vote', self.getNodeId(comment.id), datetime, comment.rating, '≈0', meAuthor),
                             RESPONSE : self.authData.token ? true : false,
@@ -307,23 +372,40 @@ var KellyProfileJoyreactorUnlock = {
             ids.push(postId);
         }     
         
-        if (self.unlockPool.request || ids.length <= 0) return;
+        if (self.unlockPool.requestController || ids.length <= 0) return;
    
-        self.unlockPool.request = self.unlockPostList(ids, self.getTpl(self.unlockPool.tpl), function(rids, unlockedData) {
-            self.onPoolUnlockedDataReady(rids, unlockedData, self.unlockPool.pool);
-            self.unlockPool.request = false;        
-            self.unlockPool.pool = {};
-        });
+        var query = "", queryPost = self.getTpl(self.unlockPool.tpl);
+        for (var i = 0; i < ids.length; i++) query += "\\n " + "node" + (i + 1) + ":node(id : \\\"" + window.btoa('Post:' + ids[i]) + "\\\") {" + queryPost.replace(/(?:\r\n|\r|\n)/g, '') + "}";
+        
+        self.unlockPool.requestController = self.getUnlockController();
+        
+        self.unlockPool.requestController.callback = function(unlockedData) {
+                self.onPoolUnlockedDataReady(ids, unlockedData, self.unlockPool.pool);
+                self.unlockPool.requestController = false;        
+                self.unlockPool.pool = {};
+            };
+            
+        self.unlockPool.requestController.request(query);  
     },
     
-    formatCensoredPost : function(postBlock) {
+    formatCensoredPost : function(postBlock, forceData) {
         
-        var self = KellyProfileJoyreactorUnlock, postId = postBlock.id.match(/[0-9]+/g), uClassName = self.handler.className;
-        if (postId.length <= 0 || !this.isCensored(postBlock)) return false;
+        var self = KellyProfileJoyreactorUnlock, postId = postBlock.id.match(/[0-9]+/g), uClassName = self.handler.className, auto = self.options.unlock.censoredMode != 'click' && !self.unlockPool.requestController;
+        if (postId.length <= 0) return false;
         
-        postId = postId[0], cImage = postBlock.getElementsByTagName('img'), cImageItem = cImage[cImage.length-1], auto = self.options.unlock.censoredMode != 'click' && !self.unlockPool.request;
-        if (cImage.length == 0 || (cImageItem.src.indexOf('/images/censorship') == -1 && cImageItem.src.indexOf('/images/unsafe_ru') == -1)) return false;
+        postId = postId[0];
         
+        if (forceData) {
+            // skip check censored for for updated data
+        } else if (!this.isCensored(postBlock)) {
+            return false;
+        }
+        
+        var cImage = postBlock.getElementsByTagName('img');        
+        if (cImage.length == 0) {
+            return false;
+        }
+               
         var unlockData = {
             postId : postId, 
             postBlock : postBlock, 
@@ -337,7 +419,7 @@ var KellyProfileJoyreactorUnlock = {
                 
                 if (success) {
                     self.handler.formatPostContainer(unlockData.postBlock);
-                    self.renderCopyright(unlockData.postBlock);
+                    if (!forceData) self.renderCopyright(unlockData.postBlock);
                 }
                 
                 if (success && unlockData.initiator) {
@@ -365,8 +447,10 @@ var KellyProfileJoyreactorUnlock = {
             }
         };
        
-        cImageItem.parentNode.insertBefore(unlockData.mediaBlock, cImage[cImage.length-1]);
-        cImageItem.parentElement.removeChild(cImageItem);
+        var cImageItem = cImage[cImage.length-1]; 
+            cImageItem.parentNode.insertBefore(unlockData.mediaBlock, cImage[cImage.length-1]);
+            cImageItem.parentElement.removeChild(cImageItem);
+            
         KellyTools.getElementByClass(unlockData.mediaBlock, uClassName + '-censored').onclick = unlockData.onManualLoad;
         
         var commentsExpand = KellyTools.getElementByClass(postBlock, 'commentnum');
@@ -377,19 +461,31 @@ var KellyProfileJoyreactorUnlock = {
         
         if (self.options.unlock.auth && unlockData.ratingBlock) unlockData.ratingBlock.style.display = 'none'; 
         
-        if (auto) { // can be beasy in some cases - ex. if too many mutations called on page during ajax pagination
-                
-                self.unlockPool.pool[postId] = unlockData;    
-            if (self.options.unlock.cache && self.options.unlock.cacheData.ids.indexOf(postId) != -1) {
-                    self.onPoolUnlockedDataReady([postId], {cachedItem : true, data : {'node1' : self.options.unlock.cacheData.data[self.options.unlock.cacheData.ids.indexOf(postId)]}}, self.unlockPool.pool);
-                    delete self.unlockPool.pool[postId];
+        if (forceData) {
+            
+            self.unlockPool.pool[postId] = unlockData;
+            self.unlockPool.tpl = 'query-post';
+            self.onPoolUnlockedDataReady([postId], {cachedItem : true, data : {'node1' : forceData}}, self.unlockPool.pool);
+            delete self.unlockPool.pool[postId];
+                          
+            self.handler.formatPostContainer(postBlock);
+            
+        } else {
+        
+            if (auto) { // can be beasy in some cases - ex. if too many mutations called on page during ajax pagination
                     
-                    self.handler.formatPostContainer(postBlock);
-                    self.renderCopyright(postBlock);
-                    
-                    KellyTools.log('Unlock : restore from cache ' + postId, KellyTools.E_NOTICE);
-                    
-            } else self.unlockPostListDelayed(true);
+                    self.unlockPool.pool[postId] = unlockData;    
+                if (self.options.unlock.cache && self.options.unlock.cacheData.ids.indexOf(postId) != -1) {
+                        self.onPoolUnlockedDataReady([postId], {cachedItem : true, data : {'node1' : self.options.unlock.cacheData.data[self.options.unlock.cacheData.ids.indexOf(postId)]}}, self.unlockPool.pool);
+                        delete self.unlockPool.pool[postId];
+                        
+                        self.handler.formatPostContainer(postBlock);
+                        self.renderCopyright(postBlock);
+                        
+                        KellyTools.log('Unlock : restore from cache ' + postId, KellyTools.E_NOTICE);
+                        
+                } else self.unlockPostListDelayed(true);
+            }
         }
         
         return true;
@@ -482,6 +578,8 @@ var KellyProfileJoyreactorUnlock = {
         
     },
     
+    /* called from profile env onExtensionReady */
+    
     formatCensoredPosts : function() {
         
         if (!this.options.unlock.censored) return;        
@@ -492,6 +590,288 @@ var KellyProfileJoyreactorUnlock = {
         if (censoredData.length > 0) this.initWorkspace(function() {
             for (var i = 0; i < censoredData.length; i++) KellyProfileJoyreactorUnlock.formatCensoredPost(censoredData[i]);
         });
+        
+        
+    },
+    
+    loadTag : function(tagName, newPage, onload){
+               
+        var query = "", self = KellyProfileJoyreactorUnlock;
+        
+        self.tagViewer.tagName = tagName;
+        
+        if (!newPage) self.tagViewer.page = 1;
+              
+        if (newPage == 'next') self.tagViewer.page++;
+        else if (newPage == 'previuse' || newPage == 'prev' ) self.tagViewer.page--;
+        else {
+            self.tagViewer.page = parseInt(newPage);
+        }
+        
+        if (self.tagViewer.page <= 0) self.tagViewer.page = 1;
+        
+        if (['GOOD', 'NEW', 'BEST'].indexOf(self.tagViewer.type) == -1) {
+            console.log('Unknown pager type ' + self.tagViewer.type );
+            self.tagViewer.type = 'GOOD';
+        }
+        
+        var offset = (self.tagViewer.page-1) * self.tagViewer.perPage;
+        
+        var tagQuery = self.getTpl('query-tag', {QUERY_POST : self.getTpl('query-post'), OFFSET : offset, TYPE : self.tagViewer.type});
+        var addPagination = function(elCl) {
+            
+                KellyTools.showPagination({ 
+                    container : KellyTools.getElementByClass(document, elCl), 
+                    curPage : self.tagViewer.page, 
+                    onGoTo : function(newPage) {
+                        self.showCNotice('Загружаю страницу...');
+                        self.loadTag(tagName, newPage, self.tagViewer.afterPageLoad);
+                        return false;
+                    }, 
+                    classPrefix : self.handler.className + '-pagination',
+                    pageItemsNum : 10,
+                    itemsNum : self.tagViewer.tagData.postPager.count,
+                    perPage : self.tagViewer.perPage,
+                });
+        }
+        
+        query = "tagData1:tag(name : \\\"" + tagName + "\\\") {" + tagQuery.replace(/(?:\r\n|\r|\n)/g, '') + "}";
+        
+        self.tagViewerRequestController = self.getUnlockController(); 
+        self.tagViewerRequestController.cfg = self.tagViewer; 
+        self.tagViewerRequestController.callback = function(unlockedData) {
+                                    
+                if (!unlockedData || !unlockedData.data || !unlockedData.data['tagData1']) {                      
+                    console.log('fail to get tag data');
+                    console.log(unlockedData);                       
+                    if (onload) onload(false);
+                    return false;
+                }
+                
+                var tagData = unlockedData.data['tagData1'];
+                self.tagViewer.tagData = tagData;
+                
+                console.log(tagData);            
+                self.tagViewer.tagData.pageCount = Math.ceil(tagData.postPager.count / self.tagViewer.perPage);
+                if (newPage > self.tagViewer.tagData.pageCount) {
+                    self.tagViewerRequestController.errorText = 'Страницы не существует (' + self.tagViewer.tagData.pageCount + ' - всего страниц, элементов ' + tagData.postPager.count + ')';
+                    if (onload) onload(false);
+                    return false;
+                }
+                
+                var pageHtml = '';
+                for (var i = 0; i < tagData.postPager.posts.length; i++) {
+                    
+                    var post = tagData.postPager.posts[i];
+                    var datetime = new Date(post.createdAt);
+                    var tagsHtml = '';
+                    for (var b = 0; b < post.tags.length; b++) {
+                        tagsHtml += '<a href="/tag/' + encodeURI(post.tags[b].name) + '" data-tag="' + post.tags[b].name + '" class="' + self.handler.className + '-tag-goto">' + post.tags[b].seoName + '</a>&nbsp;';
+                    }
+                    
+                    pageHtml += self.getTpl('post-maket', {
+                        PROTOCOL : self.handler.hostClass == 'options_page' ? 'https:' : '',
+                        USER_NAME : post.user.username, 
+                        USER_ID : self.getNodeId(post.user.id),
+                        POST_ID : self.getNodeId(post.id),
+                        DATE : self.getFormatedDate(datetime),
+                        COMMENTS_COUNT : post.commentsCount,
+                        TAGS : tagsHtml,
+                        TIME : KellyTools.getTime(datetime),
+                    });
+                }
+                 
+                 var postList = document.getElementById('post_list'); // main host
+                 if (!postList) {
+                     postList = document.createElement('DIV');
+                     postList.id = 'post_list';
+                     self.handler.getMainContainers().siteContent.innerHTML = '';
+                     self.handler.getMainContainers().siteContent.appendChild(postList);
+                 }
+                 
+                 postList.classList.add(self.handler.hostClass);
+                     
+                 var origPagination = document.getElementById('Pagination');
+                 if (origPagination) origPagination.style.display = 'none';
+                 
+                 var tagStatsHtml = '<div class="' + self.handler.className + '-tagviewer-tagStats">\
+                                    <h2>' + tagName + '</h2>\
+                                    <p><span>Всего постов : <b>' + tagData.postPager.count + '</b> Страниц : <b>' + self.tagViewer.tagData.pageCount + '</b></p>\
+                                    <p class="' + self.handler.className + '-tagviewer-pagerTypes">\
+                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'BEST' ? 'selected' : '') + '" href="#" data-type="BEST">Лучшее</a>\
+                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'GOOD' ? 'selected' : '') + '" href="#" data-type="GOOD">Хорошее</a>\
+                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'NEW' ? 'selected' : '') + '" href="#" data-type="NEW">Все</a>\
+                                     </p>\
+                                </div>';
+                 
+                 pageHtml = '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-top"></div>' + pageHtml + '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-bottom"></div>';
+                 
+                 KellyTools.setHTMLData(postList, tagStatsHtml + pageHtml);
+                       
+                 for (var i = 0; i < tagData.postPager.posts.length; i++) {
+                    
+                    var postBlock = document.getElementById('postContainer' + self.getNodeId(tagData.postPager.posts[i].id));
+                    self.formatCensoredPost(postBlock, tagData.postPager.posts[i]);
+                 }
+                 
+                 var tags = document.getElementsByClassName(self.handler.className + '-tag-goto');
+                 for (var i = 0; i < tags.length; i++) {
+                    tags[i].onclick = function() {
+                        self.showCNotice('Открываю тег ' + this.getAttribute('data-tag') + '...');
+                        self.loadTag(this.getAttribute('data-tag'), 1, self.tagViewer.afterPageLoad);
+                        return false;
+                    }
+                 }
+                 
+                 var types = document.getElementsByClassName(self.handler.className + '-tagviewer-pagerType');
+                 for (var i = 0; i < types.length; i++) {
+                    types[i].onclick = function() {
+                        self.tagViewer.type = this.getAttribute('data-type');
+                        self.showCNotice('Открываю тег ' + self.tagViewer.tagName + ' (' + this.getAttribute('data-type') + ')...');
+                        self.loadTag(self.tagViewer.tagName, 1, self.tagViewer.afterPageLoad);
+                        return false;
+                    }
+                 }
+                addPagination(self.handler.className + '-tagviewer-pagination-top');
+                addPagination(self.handler.className + '-tagviewer-pagination-bottom');
+                
+                onload(unlockedData, postList);
+            };
+            self.tagViewerRequestController.request(query);
+    },
+    
+    showTagViewerTooltip : function(tagName, target) {
+        
+        var self = KellyProfileJoyreactorUnlock;  
+            self.initWorkspace(function() {});
+            
+            if (self.tagViewerTooltip && self.tagViewerTooltip.isShown()) {
+                self.tagViewerTooltip.show(false);
+                return false;
+            }
+            
+            if (!self.tagViewerTooltip) {
+            self.tagViewerTooltip = new KellyTooltip({
+                target : target ? target : self.tagViewerMenuButton, 
+                offset : {left : 0, top : 10}, 
+                positionY : 'bottom',
+                positionX : 'left',
+                ptypeX : 'inside',                
+                ptypeY : 'outside',
+                closeByBody : true,
+                closeButton : false,
+                removeOnClose : false,                    
+                selfClass : self.handler.hostClass + ' ' + self.handler.className + '-tooltipster-tagviewer',
+                classGroup : self.handler.className + '-tooltipster',
+            });
+            } else {
+                self.tagViewerTooltip.updateCfg({target : target ? target : self.tagViewerMenuButton});
+            }
+            
+            // todo -goto ?tab=tag-viewer/
+           
+            var getFormData = function() {
+                
+                return {
+                    page : KellyTools.inputVal(self.handler.className + 'TagPage', 'int', container),
+                    tagName : KellyTools.inputVal(self.handler.className + 'TagName', 'string', container),
+                }
+            }
+            
+            var html = '\
+                <div class="' + self.handler.className + 'TagViewerForm">\
+                    <div>\
+                        <p>Просмотр тега : </p>\
+                        <p><input type="text" placeholder="Тег" class="' + self.handler.className + 'TagName" value="' + (tagName ? tagName : self.options.unlock.lastTv)  + '">\
+                           <input type="text" placeholder="Страница" value="" class="' + self.handler.className + 'TagPage"></p>\
+                        <p>\
+                            <a href="#" class="' + self.handler.className + 'TagOpen">Открыть</a>&nbsp;&nbsp;\
+                            ' + (self.handler.hostClass != 'options_page' ? '<a href="#" class="' + self.handler.className + 'TagViewInExt">В новом окне</a>' : '') + '</p>\
+                        \
+                        <p class="' + self.handler.className + 'TagViewerState"></p>\
+                    </div>\
+                </div>';
+            
+            var container = self.tagViewerTooltip.getContent();
+            KellyTools.setHTMLData(container, html);
+            
+             KellyTools.getElementByClass(container, self.handler.className + 'TagViewInExt').onclick = function() {
+                KellyTools.getBrowser().runtime.sendMessage({method: "openTab", tabData : { action : 'tagView',  formData : getFormData()}, url : '/env/html/' + self.handler.profile + 'Downloader.html?tab=tag-viewer'}, function(request) {});
+                return false;
+            }
+        
+            KellyTools.getElementByClass(container, self.handler.className + 'TagOpen').onclick = function(){
+                 var notice = KellyTools.getElementByClass(container, self.handler.className + 'TagViewerState');
+                
+                if (self.tagViewerRequestController) {
+                    notice.innerText = 'Загрузка прервана';
+                    self.tagViewerRequestController.abort();
+                    self.tagViewerRequestController = false;
+                    return false;
+                }
+                
+                var formData = getFormData();
+                self.options.unlock.lastTv = formData.tagName;
+                self.handler.fav.save('cfg');
+                
+                notice.innerText = 'Загрузка...';
+                self.loadTag(formData.tagName, formData.page, function(unlockedData, postList) {
+                    
+                    self.tagViewer.afterPageLoad(unlockedData, postList, notice);
+                    
+                });
+                
+                return false;
+            }
+            
+            self.tagViewerTooltip.show(true);
+    },
+    
+    initTagViewer : function() {
+        
+        var self = KellyProfileJoyreactorUnlock;  
+        if (self.handler.hostClass != 'options_page' && !self.options.unlock.tv) return;
+           
+        if (!self.handler.getMainContainers().menu || self.tagViewerMenuButton) { 
+            return;
+        }
+        
+        document.addEventListener('contextmenu', function(e) {
+            
+            if (e.target && e.target.tagName == 'A' && e.target.href.indexOf('/tag/') != -1) {
+                
+                var urlTagName = e.target.href.split('/tag')[1];
+                    urlTagName = urlTagName.split('/')[1];
+                    
+                if (urlTagName) urlTagName = decodeURIComponent(urlTagName).replace(/[_ +.-]/gim, ' '); // .replace(/[^а-яА-Яa-z0-9 _]/gim, "")
+                
+                self.showTagViewerTooltip(urlTagName, e.target);
+                
+                e.stopPropagation();
+                e.preventDefault();
+                return false;
+            }
+            
+            // document.addEventListener("click"
+         
+        }, true);
+            
+        
+        KellyTools.log('initTagViewer ', KellyTools.E_NOTICE);
+        
+        if (self.handler.hostClass != 'options_page') {
+            var optionsButton = KellyTools.getElementByClass(self.handler.getMainContainers().menu, self.handler.className + '-MainMenuItem-options');
+                optionsButton.classList.add(self.handler.className + '-MainMenuItem-iconed');
+                
+            KellyTools.setHTMLData(optionsButton.getElementsByTagName('A')[0], '<div class="' + self.handler.className + '-icon ' + self.handler.className + '-icon-gear ' + self.handler.className + '-buttoncolor-dynamic"></div>');
+        }
+        
+        self.tagViewerMenuButton = self.handler.fav.addMenuButton('[#]', function(){}, 'TagViewer');
+        self.tagViewerMenuButton.onclick = function() {
+            self.showTagViewerTooltip();
+            return false;
+        }
+         
     },
     
     initWorkspace : function(callback) {
@@ -528,7 +908,7 @@ var KellyProfileJoyreactorUnlock = {
                     
                     KellyTools.addEventPListener(document, "click", function(e) {
                         
-                        if (self.initState == 'loaded' && e && e.target && e.target.tagName == 'INPUT' && e.target.classList.contains('post_comment_form_unlocked') && !self.authData.postRequest && !self.unlockPool.request && self.authData.token ) {
+                        if (self.initState == 'loaded' && e && e.target && e.target.tagName == 'INPUT' && e.target.classList.contains('post_comment_form_unlocked') && !self.authData.postRequest && !self.unlockPool.requestController && self.authData.token ) {
                             
                             var postForm = KellyTools.getParentByTag(e.target, 'form');
                             var postId = KellyTools.getElementByClass(postForm, 'post_id').value;
@@ -584,7 +964,11 @@ var KellyProfileJoyreactorUnlock = {
             if (typeof data.coptions.unlock.auth == 'undefined') data.coptions.unlock.auth = true;   
             if (typeof data.coptions.unlock.unsafe == 'undefined') data.coptions.unlock.unsafe = true;   
             if (typeof data.coptions.unlock.anon == 'undefined') data.coptions.unlock.anon = true;   
-
+            if (typeof data.coptions.unlock.tv == 'undefined') data.coptions.unlock.tv = true;   
+            if (typeof data.coptions.unlock.lastTv == 'undefined') data.coptions.unlock.lastTv = 'Этти';
+            
+            console.log(data.coptions.unlock);
+            
             KellyProfileJoyreactorUnlock.options = data.coptions;
         }
         
@@ -595,6 +979,7 @@ var KellyProfileJoyreactorUnlock = {
             optionsManager.cfgInput['unlock_unlockCensoredMode'] = {name : 'censoredMode', parent : 'unlock', loc : 'unlock_censored_mode', default : 'auto', listLoc : ['unlock_censored_auto', 'unlock_censored_manual'], list : ['auto' , 'click'], type : 'enum'};
             optionsManager.cfgInput['unlock_unlockCensoredCache'] = {name : 'cache', parent : 'unlock', loc : 'unlock_censored_cache', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredUnsafe'] = {name : 'unsafe', parent : 'unlock', loc : 'unlock_censored_unsafe', notice : 'unlock_censored_unsafe_notice', type : 'bool', default : true};
+            optionsManager.cfgInput['unlock_unlockCensoredShowTV'] = {name : 'tv', parent : 'unlock', loc : 'unlock_censored_showtv', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAuth'] = {name : 'auth', parent : 'unlock', loc : 'unlock_censored_auth', type : 'bool', default : true};
         }      

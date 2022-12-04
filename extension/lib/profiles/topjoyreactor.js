@@ -15,7 +15,6 @@ var KellyProfileTopJoyreactor = new Object();
         handler.events.onPageReadyOrig = handler.events.onPageReady;
         handler.events.onExtensionReady = function() {
            
-            if (handler.unlockManager) handler.unlockManager.formatCensoredPosts();
             setTimeout(handler.updateSidebarConfig, 400);
         };
         

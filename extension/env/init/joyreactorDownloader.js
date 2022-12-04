@@ -14,15 +14,42 @@ KellyJoyreactorDPage.init = function() {
         // K_FAV.getGlobal('image_events').saveImageProportions = function() { return; }            
         // K_FAV.aspectRatioAccurCheck = false; // копирайт портит проверку соотношения сторон, отключаем
         
+        
         document.getElementById('sandbox-env').classList.remove('loading');
-        if (!K_FAV.defaultNavigation()) K_FAV.showOptionsDialog(); 
+        var unlockManager = KellyProfileJoyreactor.getInstance().unlockManager;
+        if (unlockManager) {
+            unlockManager.initTagViewer();
+            
+            K_WATCHDOG = new KellyPageWatchdog();
+            K_WATCHDOG.observerLocation = false;
+            K_WATCHDOG.exec();
+            K_WATCHDOG.setLocation({url : 'https://joyreactor.cc/', host : 'https://joyreactor.cc'});
+        }
+        
+        if (window.location.href.indexOf('tag-viewer') != -1 && unlockManager) {
+            
+            K_FAV.hideFavoritesBlock();
+            
+            
+            KellyTools.getBrowser().runtime.sendMessage({method: "getOpenTabData"}, function(request) {
+                if (request.tabData && request.tabData.action == 'tagView') {
+                    
+                    unlockManager.initWorkspace(function() {
+                        
+                        unlockManager.showCNotice('Загружаю страницу...');
+                        unlockManager.loadTag(request.tabData.formData.tagName, request.tabData.formData.page, unlockManager.tagViewer.afterPageLoad);
+                    });
+                }
+            });
+            
+        } else if (!K_FAV.defaultNavigation()) K_FAV.showOptionsDialog(); 
     }
     
     KellyJoyreactorDPage.env.events.onWebRequestReady = function(method) {
         if (method == 'registerDownloader' && !KellyJoyreactorDPage.rendered) {
             KellyJoyreactorDPage.rendered = true;
             
-            var resources = ['core', 'single'];
+            var resources = ['core', 'single', 'joyreactorDownloader'];
             
             if (K_FAV.getGlobal('options').darkTheme) {
                 document.body.classList.add(KellyJoyreactorDPage.env.className + '-dark');
