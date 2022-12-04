@@ -9,7 +9,7 @@ var KellyProfileJoyreactorUnlock = {
     tagViewer : {
         navigation : [] /* todo - last 10 visited tags, filter by posts type, short info in tag header */, 
         
-        typeNames : {'GOOD' : 'Хорошее', 'NEW' : 'Новое', 'BEST' : 'Лучшее', 'ALL' : 'Бездна'},
+        typeNames : {'NEW' : 'Новое', 'GOOD' : 'Хорошее', 'BEST' : 'Лучшее', 'ALL' : 'Бездна'},
         
         page : 1, // current selected page in pager
         perPage : 20, 
@@ -518,7 +518,8 @@ var KellyProfileJoyreactorUnlock = {
     
     renderCopyright : function(postBlock) {
         
-        var self = this;
+        var self = this;        
+        if (self.handler.hostClass == 'options_page') return;
         
         var getSubName = function(length) {
             
@@ -536,31 +537,56 @@ var KellyProfileJoyreactorUnlock = {
         
         if (!self.copyrightBN) self.copyrightBN = getSubName(5) + '-' + getSubName(5);
         
-        if (postBlock.getElementsByTagName(self.copyrightBN).length > 0) return;
+        var afix = (postBlock.className.indexOf('tagViewerPostList') != -1) ? 'pl' : '';
         
-        var holder = document.createElement(self.copyrightBN);
+        if (postBlock.getElementsByTagName(self.copyrightBN + afix).length > 0) return;
+        
+        var holder = document.createElement(self.copyrightBN + afix);
         
         if (window.location.host.indexOf('top.joyreactor.cc') != -1 || window.location.host.indexOf('m.joyreactor.cc') != -1 || window.location.host.indexOf('m.reactor.cc') != -1 ) {
             
             // postBlock.insertBefore(holder, postBlock.firstChild);
             return;
             
-        } else if (window.location.host.indexOf('old.') != -1) {
+        }
+        
+        var additionCss = '';
+        
+        if (postBlock.className.indexOf('tagViewerPostList') != -1) {
             
-            var uheadShare = postBlock.getElementsByClassName('uhead_share')[0];
-                uheadShare.insertBefore(holder, uheadShare.firstChild);
-                
-            self.copyrightCssAdditions = self.copyrightBN + '-tk { margin-left: 4px; font-size: 11px; }';
-                
+            postBlock.getElementsByTagName('H2')[0].appendChild(holder);
+            
+            var title = 'KellyC © nradiowave <' + self.copyrightBN + 'tk>Сказать спасибо</' +self.copyrightBN + 'tk>';
+        
         } else {
             
-             postBlock.getElementsByClassName('uhead_nick')[0].appendChild(holder);
-             self.copyrightCssAdditions = self.copyrightBN + ' { position : absolute; right : 0; }';
+            var title = 'разблокировано через расширение <b>KellyC</b> <' + self.copyrightBN + 'tk>Сказать спасибо</' +self.copyrightBN + 'tk>';
+        
+            if (window.location.host.indexOf('old.') != -1) {
+                
+                var uheadShare = postBlock.getElementsByClassName('uhead_share')[0];
+                    uheadShare.insertBefore(holder, uheadShare.firstChild);
+                    
+                self.copyrightCssAdditions = self.copyrightBN + 'tk { margin-left: 4px; font-size: 11px; }';
+                    
+            } else {
+                
+                 postBlock.getElementsByClassName('uhead_nick')[0].appendChild(holder);
+                 self.copyrightCssAdditions = self.copyrightBN + ' { position : absolute; right : 0; }';
+            }
+            
         }
         
         if (!self.copyrightCss) {
            
-           self.copyrightCss = self.copyrightBN + ' {\
+           self.copyrightCss = self.copyrightBN + 'pl {\
+                    color: #100f0f;\
+                    font-size: 12px;\
+                    padding: 4px;\
+                    border-radius: 2px;\
+                    float : right;\
+                    padding-right : 0;\
+               }' + self.copyrightBN + ' {\
                     color: #100f0f;\
                     font-size: 12px;\
                     padding: 4px;\
@@ -568,7 +594,8 @@ var KellyProfileJoyreactorUnlock = {
                     top: 18px;\
                     z-index: 1;\
                     padding-right: 21px;\
-               }' + self.copyrightBN + '-tk {\
+                    ' + additionCss + '\
+               }' + self.copyrightBN + 'tk {\
                     margin-left: 7px;\
                     font-weight: bold;\
                     text-decoration: none;\
@@ -583,9 +610,9 @@ var KellyProfileJoyreactorUnlock = {
            KellyTools.addCss(self.handler.className + '-joyunlocker', self.copyrightCss); 
         }
         
-        KellyTools.setHTMLData(holder, 'разблокировано через расширение <b>KellyC</b> <' + self.copyrightBN + '-tk>Сказать спасибо</' +self.copyrightBN + '-tk>'); ;
-        holder.getElementsByTagName(self.copyrightBN + '-tk')[0].onclick = function() {
-            KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : '/env/html/' + self.handler.profile + 'Downloader.html?tab=donate'}, function(request) {});
+        KellyTools.setHTMLData(holder, title);
+        holder.getElementsByTagName(self.copyrightBN + 'tk')[0].onclick = function() {
+            KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : 'https://nradiowave.ru/webdev'}, function(request) {}); // /''/env/html/' + self.handler.profile + 'Downloader.html?tab=donate
         }
         
     },
@@ -696,7 +723,8 @@ var KellyProfileJoyreactorUnlock = {
                  self.handler.getMainContainers().siteContent.innerHTML = '';
                  self.handler.getMainContainers().siteContent.appendChild(postList);
                  postList.classList.add(self.handler.hostClass);
-
+                 postList.classList.add(self.handler.className + '-tagViewerPostList');
+                 
                  var tagStatsHtml = '<div class="' + self.handler.className + '-tagviewer-tagStats">\
                                     <h2>' + tagName + '</h2>\
                                     <p><span><b>Тег отображается без дополнительной фильтрации NSFW и исключений</b></p>\
@@ -772,7 +800,8 @@ var KellyProfileJoyreactorUnlock = {
                         return false;
                     }
                  }
-                     
+                 
+                self.renderCopyright(postList);
                 onload(unlockedData, postList);
                 
                 
@@ -793,7 +822,7 @@ var KellyProfileJoyreactorUnlock = {
             if (!self.tagViewerTooltip) {
             self.tagViewerTooltip = new KellyTooltip({
                 target : target ? target : self.tagViewerMenuButton, 
-                offset : {left : 0, top : 10}, 
+                offset : {left : 0, top : 15}, 
                 positionY : 'bottom',
                 positionX : 'left',
                 ptypeX : 'inside',                
@@ -808,22 +837,28 @@ var KellyProfileJoyreactorUnlock = {
                 self.tagViewerTooltip.updateCfg({target : target ? target : self.tagViewerMenuButton});
             }
             
-            // todo -goto ?tab=tag-viewer/
-           
             var getFormData = function() {
                 
                 return {
                     page : KellyTools.inputVal(self.handler.className + 'TagPage', 'int', container),
                     tagName : KellyTools.inputVal(self.handler.className + 'TagName', 'string', container),
+                    type : KellyTools.inputVal(self.handler.className + 'TagType', 'string', container),
                 }
             }
             
             var tagUrl = 'https://joyreactor.cc/tag/' + encodeURIComponent(tagName ? tagName : self.options.unlock.lastTv);
+            var typeSelect = '';
+              
+            for (var typeKey in self.tagViewer.typeNames) {
+                typeSelect += '<option value="' + typeKey + '" ' + (typeKey == 'GOOD' ? 'selected' : '') + '>' + self.tagViewer.typeNames[typeKey] + '</option>'
+            }   
+            
             var html = '\
                 <div class="' + self.handler.className + 'TagViewerForm">\
                     <div>\
                         <p>Просмотр тега : </p>\
                         <p><input type="text" placeholder="Тег" class="' + self.handler.className + 'TagName" value="' + (tagName ? tagName : self.options.unlock.lastTv)  + '">\
+                           <select class="' + self.handler.className + 'TagType">' + typeSelect +'</select>\
                            <input type="text" placeholder="Страница" value="" class="' + self.handler.className + 'TagPage"></p>\
                         <p>\
                             ' + ( self.tagViewer.openInCurrentTab ? '<a href="' + tagUrl + '" class="' + self.handler.className + 'TagOpen">Открыть</a>' : '') + '&nbsp;&nbsp;\
@@ -856,6 +891,9 @@ var KellyProfileJoyreactorUnlock = {
                 self.handler.fav.save('cfg');
                 
                 notice.innerText = 'Загрузка...';
+                
+                self.tagViewer.type = formData.type;
+                
                 self.loadTag(formData.tagName, formData.page, function(unlockedData, postList) {
                     
                     self.tagViewer.afterPageLoad(unlockedData, postList, notice);
@@ -901,13 +939,23 @@ var KellyProfileJoyreactorUnlock = {
         KellyTools.log('initTagViewer ', KellyTools.E_NOTICE);
         
         if (self.handler.hostClass != 'options_page') {
+            
             var optionsButton = KellyTools.getElementByClass(self.handler.getMainContainers().menu, self.handler.className + '-MainMenuItem-options');
                 optionsButton.classList.add(self.handler.className + '-MainMenuItem-iconed');
                 
+            KellyTools.getElementByClass(self.handler.getMainContainers().menu, self.handler.className + '-MainMenuItem-fav').classList.add(self.handler.className + '-MainMenuItem-iconed');
+            
             KellyTools.setHTMLData(optionsButton.getElementsByTagName('A')[0], '<div class="' + self.handler.className + '-icon ' + self.handler.className + '-icon-gear ' + self.handler.className + '-buttoncolor-dynamic"></div>');
+            
+            self.tagViewerMenuButton = self.handler.fav.addMenuButton('<div class="' + self.handler.className + '-icon ' + self.handler.className + '-icon-tag ' + self.handler.className + '-buttoncolor-dynamic"></div>', function(){}, 'TagViewer');
+            self.tagViewerMenuButton.classList.add(self.handler.className + '-MainMenuItem-iconed');
+            
+        } else {
+            
+            self.tagViewerMenuButton = self.handler.fav.addMenuButton('[#]', function(){}, 'TagViewer');
         }
         
-        self.tagViewerMenuButton = self.handler.fav.addMenuButton('[#]', function(){}, 'TagViewer');
+        
         self.tagViewerMenuButton.onclick = function() {
             self.showTagViewerTooltip();
             return false;

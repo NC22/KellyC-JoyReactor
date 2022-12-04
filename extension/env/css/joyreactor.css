@@ -45,8 +45,18 @@
 
 /* unlock.js */
 
+.__BASECLASS__-tooltipster-content select.__BASECLASS__TagType{
+    margin-bottom : 5px;
+    background: #d8d8d8;
+}
+
+.__BASECLASS__-tooltipster-content input.__BASECLASS__TagPage{
+    background: #d8d8d8;
+}
+
+
 .__BASECLASS__-tooltipster-content input.__BASECLASS__TagName{
-    margin-bottom : 6px;
+    margin-bottom : 18px;
 }
 
 .__BASECLASS__-tooltipster-content .__BASECLASS__TagViewInExt{
@@ -501,7 +511,7 @@ table.__BASECLASS__-options-table input[type="submit"] {
 }
 
 .__BASECLASS__-tooltipster-tagviewer {
-    width : 300px;
+    width : 240px;
     z-index: 1010;
 }
 

@@ -21,6 +21,19 @@
     cursor: pointer;
 }
 
+.jr-downloader .__BASECLASS__-tooltipster-content select.__BASECLASS__TagType{
+    margin-bottom : 5px;
+    background: #d8d8d8;
+}
+
+.jr-downloader .__BASECLASS__-tooltipster-content input.__BASECLASS__TagPage{
+    background: #d8d8d8;
+}
+
+.jr-downloader .__BASECLASS__-tooltipster-content input.__BASECLASS__TagName{
+    margin-bottom : 18px;
+}
+
 .jr-downloader .__BASECLASS__-tagviewer-pagination-bottom {
     margin-bottom : 120px;
 }
@@ -42,7 +55,7 @@
 }
 
 .__BASECLASS__-tooltipster-tagviewer {
-    width : 300px;
+    width : 240px;
     z-index: 1010;
 }
 
