@@ -1,0 +1,101 @@
+
+/* exceptions for jr enviroment  */
+
+.jr-downloader .post_content_expand {
+    display : none;
+}
+
+.jr-downloader .post_content.post_content_cut {
+    max-height: 2000px;
+    overflow: hidden;
+}
+
+.jr-downloader .post_content_expand {
+    background: #8c8c8c;
+    width: 100%;
+    height: 48px;
+    line-height: 48px;
+    padding-left: 24px;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.__BASECLASS__-tooltipster-content input.__BASECLASS__TagName{
+    margin-bottom : 6px;
+}
+
+.__BASECLASS__-tooltipster-content .__BASECLASS__TagViewInExt{
+    float : right;
+}
+
+.__BASECLASS__-tagviewer-pagerTypes a {
+    margin-right : 6px;
+}
+
+.__BASECLASS__-tagviewer-pagerTypes a.selected {
+    font-weight : bold;
+}
+
+.__BASECLASS__-tooltipster-tagviewer {
+    width : 300px;
+    z-index: 1010;
+}
+
+.jr-downloader .avatar {
+    width : 30px;
+    margin-right : 6px;
+    
+}
+
+.jr-downloader .ufoot {
+    padding: 6px;
+    background: #e2e2e28a;
+}
+
+.jr-downloader .comment {
+    padding: 6PX;
+    background: #0000001a;
+    margin-bottom: 6px;
+}
+
+.__BASECLASS__-dark.jr-downloader .ufoot {
+    background: transparent;
+}
+
+.__BASECLASS__-dark.jr-downloader .comment {
+    background: #525252;
+}
+
+.jr-downloader .comments_bottom {
+    margin-top : 6px;
+}
+
+.jr-downloader .taglist {
+    max-height: 65px;
+    margin: 0;
+    margin-bottom: 7px;
+    overflow: hidden;    
+    line-height: 1;
+}
+
+.jr-downloader .comment .avatar {
+    width: 15px;
+    margin-right: 6px;
+}
+
+.jr-downloader .uhead_share {
+    float : right;
+}
+
+.jr-downloader .post_content .image img {
+    width : 100%;
+}
+
+.jr-downloader .uhead {
+    margin-top: 16px;
+}    
+
+#post_list {
+    max-width: 811px;
+}
