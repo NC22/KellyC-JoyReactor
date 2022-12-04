@@ -24,47 +24,51 @@ KellyEDJRUnlocker.getInitiatorUrl = function(e) {
 
 KellyEDJRUnlocker.initDRequest = function() {
     
-     KellyEDispetcher.events.push({onBeforeUpdateNetRequestRules : function(self, tabData) {
-             
-            var urlFilter = ['https://api.joyreactor.cc/graphql', 'http://api.joyreactor.cc/graphql', 'http://api.joyreactor.cc/graphql?unlocker=1', 'https://api.joyreactor.cc/graphql?unlocker=1'], newRules = [];
-            var getDefaultRule = function(url) {
-                
-                 KellyEDispetcherDR.declaredRulesId++;
+     if (KellyEDJRUnlocker.cfg.webRequest && KellyEDJRUnlocker.cfg.unlock && KellyEDJRUnlocker.cfg.unlock.censored) {                    
+        
+         KellyEDispetcher.events.push({onBeforeUpdateNetRequestRules : function(self, tabData) {
                  
-                 return {
+                var urlFilter = ['https://api.joyreactor.cc/graphql', 'http://api.joyreactor.cc/graphql', 'http://api.joyreactor.cc/graphql?unlocker=1', 'https://api.joyreactor.cc/graphql?unlocker=1'], newRules = [];
+                var getDefaultRule = function(url) {
+                    
+                     KellyEDispetcherDR.declaredRulesId++;
                      
-                    "id" : KellyEDispetcherDR.declaredRulesId,
-                    
-                    "action": {
-                        "type" : "modifyHeaders",
-                        "requestHeaders" : [
-                            { "header": "Origin", "operation": "set", "value": 'https://api.joyreactor.cc' },                    
-                        ],
-                        "responseHeaders" : [
-                             { "header": "Access-Control-Allow-Origin", "operation": "set", "value": KellyTools.getLocationFromUrl(tabData.port.sender.tab.url).origin}, 
-                             { "header": "Access-Control-Allow-Credentials", "operation": "set", "value": "true" },
-                             { "header": "Access-Control-Allow-Headers", "operation": "set", "value": "Content-Type" },
-                        ],
-                    },
-                    
-                    "condition": { 
-                        "urlFilter" : url, 
-                        "resourceTypes" : ['xmlhttprequest', 'other'],
-                        "tabIds" : [tabData.port.sender.tab.id],
-                    },
-                    
-                    "priority" : 1,
-                    
-                };                
-            }
-            
-            for (var i = 0; i < urlFilter.length; i++) {
-                 tabData.declaredRules.push(getDefaultRule(urlFilter[i]));
-            }
-            
-            KellyTools.log('Unlock active', 'KellyEDispetcher | declarativeNetRequest | [JoyReactor Unlocker]');             
-           
-     }});
+                     return {
+                         
+                        "id" : KellyEDispetcherDR.declaredRulesId,
+                        
+                        "action": {
+                            "type" : "modifyHeaders",
+                            "requestHeaders" : [
+                                { "header": "Origin", "operation": "set", "value": 'https://api.joyreactor.cc' },                    
+                            ],
+                            "responseHeaders" : [
+                                 { "header": "Access-Control-Allow-Origin", "operation": "set", "value": KellyTools.getLocationFromUrl(tabData.port.sender.tab.url).origin}, 
+                                 { "header": "Access-Control-Allow-Credentials", "operation": "set", "value": "true" },
+                                 { "header": "Access-Control-Allow-Headers", "operation": "set", "value": "Content-Type" },
+                            ],
+                        },
+                        
+                        "condition": { 
+                            "urlFilter" : url, 
+                            "resourceTypes" : ['xmlhttprequest', 'other'],
+                            "tabIds" : [tabData.port.sender.tab.id],
+                        },
+                        
+                        "priority" : 1,
+                        
+                    };                
+                }
+                
+                for (var i = 0; i < urlFilter.length; i++) {
+                     tabData.declaredRules.push(getDefaultRule(urlFilter[i]));
+                }
+                
+                KellyTools.log('Unlock active', 'KellyEDispetcher | declarativeNetRequest | [JoyReactor Unlocker]');             
+               
+         }});
+     }
+     
 }
 
 KellyEDJRUnlocker.initWebRequest = function() {

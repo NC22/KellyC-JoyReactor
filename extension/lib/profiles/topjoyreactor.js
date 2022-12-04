@@ -81,6 +81,7 @@ var KellyProfileTopJoyreactor = new Object();
                     
                     if (!e.data || !e.data.method || e.data.method != 'kelly_fetch_hook_event' || !e.data.requestId) return false;
                     
+                    
                     var getGraphQLPosts = function(inData) {
                         
                         if (!inData) return false;
@@ -92,8 +93,8 @@ var KellyProfileTopJoyreactor = new Object();
                              else 
                                  return inData.node.postPager.posts;
                              
-                        } else if (inData.blog) { // e.data.eventDataIn.requestCfg.body.indexOf(...) TagPageQuery 
-                            return inData.blog.postPager.posts; 
+                        } else if (inData.tag) { // e.data.eventDataIn.requestCfg.body.indexOf(...) TagPageQuery 
+                            return inData.tag.postPager.posts; 
                         } else if (inData.user) { // e.data.eventDataIn.requestCfg.body.indexOf(...) UserProfilePageQuery
                             return inData.user.postPager.posts;     
                         } else if (inData.weekTopPosts) { // e.data.eventDataIn.requestCfg.body.indexOf(...) WeekTopPageQuery
@@ -115,6 +116,7 @@ var KellyProfileTopJoyreactor = new Object();
                         
                         var modifyResponse = false;
                         
+                        /*
                         if (handler.unlockAnon && e.data.eventDataIn.responseJson.data && typeof e.data.eventDataIn.responseJson.data.me != 'undefined' && !e.data.eventDataIn.responseJson.data.me) {
                             
                             var id = 1005500 + Math.floor(Math.random() * 400);
@@ -136,12 +138,13 @@ var KellyProfileTopJoyreactor = new Object();
                             
                             modifyResponse = true;
                         }
-                        
+                        */
                                 
                         var posts = false;
                         try {
                             
-                            // console.log(e.data.eventDataIn);
+                            console.log('DETECT POSTS');
+                            console.log(e.data.eventDataIn);
                             
                             if (Object.prototype.toString.call(e.data.eventDataIn.responseJson) === '[object Array]') {
                                 
@@ -156,7 +159,7 @@ var KellyProfileTopJoyreactor = new Object();
                                 posts = getGraphQLPosts(e.data.eventDataIn.responseJson.data);
                             }
                             
-                            // console.log(posts);
+                            console.log(posts);
                              
                         } catch(e) {
                             
@@ -169,14 +172,8 @@ var KellyProfileTopJoyreactor = new Object();
                             KellyTools.log('onRequestReady : GraphQL posts data updated ' + posts.length); 
                             
                             for (var i = 0; i < posts.length; i++) {
-                                posts[i].text += '<span class="kelly-post-id" style="display : none;" data-id="' + (KellyProfileJoyreactorUnlock.getNodeId(posts[i].id)) + '"></span>';
-                                if (handler.unlockUnsafe) {
-                                    if (posts[i].unsafe && handler.unlockManager) {
-                                        posts[i].text += '<span class="kelly-copyright-placeholder"></span>';
-                                    }
-                                    
-                                    posts[i].unsafe = false;
-                                }
+                                posts[i].user.username += '?POST_ID=' + (KellyProfileJoyreactorUnlock.getNodeId(posts[i].id));
+                                posts[i].unsafe = false;
                             }
                             
                             modifyResponse = true;
@@ -241,7 +238,26 @@ var KellyProfileTopJoyreactor = new Object();
                 
                 } else {
                     
-                    var linkButton = post[i].querySelector('.post-footer button.ant-dropdown-trigger'), postId = post[i].querySelector('.kelly-post-id'), copyright = post[i].querySelector('.kelly-copyright-placeholder');
+                    var postId = false;
+                    if (!post[i].getAttribute('data-id')) {
+                        
+                        postId = post[i].querySelector('.primary-link');
+                        if (postId && postId.innerHTML.indexOf('POST_ID=') != -1) {
+                            
+                            var postIdData = postId.innerHTML.split('=')[1].trim();
+                            
+                            postId.innerText = postId.innerHTML.replace('?POST_ID=' + postIdData, '');
+                            postId.href = postId.href.replace(encodeURIComponent('?POST_ID=' + postIdData), '');
+                            
+                            postId.parentNode.insertBefore(postId.cloneNode(true), postId); // clear native events
+                            postId.parentNode.removeChild(postId);
+                            
+                            post[i].setAttribute('data-id', postIdData);
+                            
+                        } else postId = false;
+                    }
+                    
+                    var linkButton = post[i].querySelector('.post-footer button.ant-dropdown-trigger');
                     if (linkButton && postId) {
                         
                         link = document.createElement('A');
@@ -252,9 +268,6 @@ var KellyProfileTopJoyreactor = new Object();
                         
                     }
                     
-                    if (copyright && handler.unlockManager) {
-                        handler.unlockManager.renderCopyright(post[i]);
-                    }
                 }
             }
             

@@ -578,7 +578,7 @@ var KellyProfileJoyreactorUnlock = {
         
     },
     
-    /* called from profile env onExtensionReady */
+    /* called from profile env onExtensionReady, designed for old joyreactor engine (without api), addtion global unlock functions for new engine and API can be found in joyreactor.unlock.d.js */
     
     formatCensoredPosts : function() {
         
@@ -696,6 +696,7 @@ var KellyProfileJoyreactorUnlock = {
                  
                  var tagStatsHtml = '<div class="' + self.handler.className + '-tagviewer-tagStats">\
                                     <h2>' + tagName + '</h2>\
+                                    <p><span><b>Тег отображается без дополнительной фильтрации NSFW и исключений</b></p>\
                                     <p><span>Всего постов : <b>' + tagData.postPager.count + '</b> Страниц : <b>' + self.tagViewer.tagData.pageCount + '</b></p>\
                                     <p class="' + self.handler.className + '-tagviewer-pagerTypes">\
                                         <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'BEST' ? 'selected' : '') + '" href="#" data-type="BEST">Лучшее</a>\
@@ -978,9 +979,9 @@ var KellyProfileJoyreactorUnlock = {
             optionsManager.cfgInput['unlock_unlockCensored'] = {name : 'censored', parent : 'unlock', loc : 'unlock_censored', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredMode'] = {name : 'censoredMode', parent : 'unlock', loc : 'unlock_censored_mode', default : 'auto', listLoc : ['unlock_censored_auto', 'unlock_censored_manual'], list : ['auto' , 'click'], type : 'enum'};
             optionsManager.cfgInput['unlock_unlockCensoredCache'] = {name : 'cache', parent : 'unlock', loc : 'unlock_censored_cache', type : 'bool', default : true};
-            optionsManager.cfgInput['unlock_unlockCensoredUnsafe'] = {name : 'unsafe', parent : 'unlock', loc : 'unlock_censored_unsafe', notice : 'unlock_censored_unsafe_notice', type : 'bool', default : true};
+            // optionsManager.cfgInput['unlock_unlockCensoredUnsafe'] = {name : 'unsafe', parent : 'unlock', loc : 'unlock_censored_unsafe', notice : 'unlock_censored_unsafe_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredShowTV'] = {name : 'tv', parent : 'unlock', loc : 'unlock_censored_showtv', type : 'bool', default : true};
-            optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
+            // optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAuth'] = {name : 'auth', parent : 'unlock', loc : 'unlock_censored_auth', type : 'bool', default : true};
         }      
         return this;
