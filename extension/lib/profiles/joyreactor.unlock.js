@@ -919,6 +919,8 @@ var KellyProfileJoyreactorUnlock = {
             
             if (e.target && e.target.tagName == 'A' && e.target.href.indexOf('/tag/') != -1) {
                 
+                if (self.tagViewerTooltip && self.tagViewerTooltip.isShown() && self.tagViewerTooltip.isChild(e.target, self.tagViewerTooltip.self)) return;
+                
                 var urlTagName = e.target.href.split('/tag')[1];
                     urlTagName = urlTagName.split('/')[1];
                     
