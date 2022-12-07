@@ -915,28 +915,31 @@ var KellyProfileJoyreactorUnlock = {
             return;
         }
         
-        document.addEventListener('contextmenu', function(e) {
+        if (self.options.unlock.tvAny) {
             
-            if (e.target && e.target.tagName == 'A' && e.target.href.indexOf('/tag/') != -1) {
+            document.addEventListener('contextmenu', function(e) {
                 
-                if (self.tagViewerTooltip && self.tagViewerTooltip.isShown() && self.tagViewerTooltip.isChild(e.target, self.tagViewerTooltip.self)) return;
-                
-                var urlTagName = e.target.href.split('/tag')[1];
-                    urlTagName = urlTagName.split('/')[1];
+                if (e.target && e.target.tagName == 'A' && e.target.href.indexOf('/tag/') != -1) {
                     
-                if (urlTagName) urlTagName = decodeURIComponent(urlTagName).replace(/[ +]/gim, ' '); // .replace(/[^а-яА-Яa-z0-9 _]/gim, "")
+                    if (self.tagViewerTooltip && self.tagViewerTooltip.isShown() && self.tagViewerTooltip.isChild(e.target, self.tagViewerTooltip.self)) return;
+                    
+                    var urlTagName = e.target.href.split('/tag')[1];
+                        urlTagName = urlTagName.split('/')[1];
+                        
+                    if (urlTagName) urlTagName = decodeURIComponent(urlTagName).replace(/[ +]/gim, ' '); // .replace(/[^а-яА-Яa-z0-9 _]/gim, "")
+                    
+                    self.showTagViewerTooltip(urlTagName, e.target);
+                    
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return false;
+                }
                 
-                self.showTagViewerTooltip(urlTagName, e.target);
-                
-                e.stopPropagation();
-                e.preventDefault();
-                return false;
-            }
+                // document.addEventListener("click"
+             
+            }, true);
             
-            // document.addEventListener("click"
-         
-        }, true);
-            
+        }   
         
         KellyTools.log('initTagViewer ', KellyTools.E_NOTICE);
         
@@ -1057,6 +1060,7 @@ var KellyProfileJoyreactorUnlock = {
             if (typeof data.coptions.unlock.anon == 'undefined') data.coptions.unlock.anon = true;   
             if (typeof data.coptions.unlock.tv == 'undefined') data.coptions.unlock.tv = true;   
             if (typeof data.coptions.unlock.lastTv == 'undefined') data.coptions.unlock.lastTv = 'Этти';
+            if (typeof data.coptions.unlock.tvAny == 'undefined') data.coptions.unlock.tvAny = false;
             
             console.log(data.coptions.unlock);
             
@@ -1070,7 +1074,8 @@ var KellyProfileJoyreactorUnlock = {
             optionsManager.cfgInput['unlock_unlockCensoredMode'] = {name : 'censoredMode', parent : 'unlock', loc : 'unlock_censored_mode', default : 'auto', listLoc : ['unlock_censored_auto', 'unlock_censored_manual'], list : ['auto' , 'click'], type : 'enum'};
             optionsManager.cfgInput['unlock_unlockCensoredCache'] = {name : 'cache', parent : 'unlock', loc : 'unlock_censored_cache', type : 'bool', default : true};
             // optionsManager.cfgInput['unlock_unlockCensoredUnsafe'] = {name : 'unsafe', parent : 'unlock', loc : 'unlock_censored_unsafe', notice : 'unlock_censored_unsafe_notice', type : 'bool', default : true};
-            optionsManager.cfgInput['unlock_unlockCensoredShowTV'] = {name : 'tv', parent : 'unlock', loc : 'unlock_censored_showtv', type : 'bool', default : true};
+            optionsManager.cfgInput['unlock_unlockCensoredShowTV'] = {name : 'tv', parent : 'unlock', loc : 'unlock_censored_showtv', type : 'bool', default : true};            
+            optionsManager.cfgInput['unlock_unlockCensoredShowTV_Any'] = {name : 'tvAny', parent : 'unlock', loc : 'unlock_censored_showtv_any', type : 'bool', default : false};
             // optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAuth'] = {name : 'auth', parent : 'unlock', loc : 'unlock_censored_auth', type : 'bool', default : true};
         }      
