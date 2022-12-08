@@ -3,8 +3,12 @@
     rating,
     text,
     createdAt,
+    commentsCount,
     user {
         id, username
+    },
+    tags {
+        name, seoName, id
     },
     comments { 
         level, parent {id}, createdAt, rating, user {id, username}, id, text, 

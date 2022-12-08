@@ -2,6 +2,7 @@
     id,
     rating,
     text,
+    createdAt,
     commentsCount,
     user {
         id, username
@@ -9,7 +10,6 @@
     tags {
         name, seoName, id
     },
-    createdAt,
     attributes {
         ... on AttributeEmbed {id, type, value, image { type }} 
         ... on AttributePicture {id, type, image { type, width, height }}

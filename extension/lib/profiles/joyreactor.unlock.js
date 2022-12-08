@@ -3,9 +3,21 @@ var KellyProfileJoyreactorUnlock = {
     // this.handler = env profile object
     
     postMaxHeight : 2000, cacheLimit : 400, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
-    tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],
-    unlockPool : {pool : {}, tpl : 'query-post', delay : 2, maxAttempts : 10, reattemptTime : 1.4, timer : false, request : false}, 
-    authData : {token : false}, initEvents : [],
+    tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],    
+    authData : {token : false}, initEvents : [],    
+    unlockPool : {
+        
+        pool : {}, 
+        tpl : 'query-post', 
+        delay : 2,
+        maxAttempts : 10, 
+        reattemptTime : 1.4, 
+        
+        timer : false, // delay timeout before request start
+        requestController : false, // request controller
+    }, 
+    // .tagViewerMenuButton
+    // .tagViewerRequestController
     tagViewer : {
         navigation : [] /* todo - last 10 visited tags, filter by posts type, short info in tag header */, 
         
@@ -367,8 +379,32 @@ var KellyProfileJoyreactorUnlock = {
         
         if (rids !== false && unlockedData && !unlockedData.cachedItem && self.options.unlock.cache) self.cacheUpdate(rids, unlockedData.data);        
     },
+    
+    getQueryPost : function(ids, tplName) {
         
-    unlockPostListDelayed : function(delay) {
+        var query = "", queryPost = KellyProfileJoyreactorUnlock.getTpl(tplName);
+        for (var i = 0; i < ids.length; i++) query += "\\n " + "node" + (i + 1) + ":node(id : \\\"" + window.btoa('Post:' + ids[i]) + "\\\") {" + queryPost.replace(/(?:\r\n|\r|\n)/g, '') + "}";
+        
+        return query;
+    },
+    
+    unlockPostList : function(ids, onReady) {
+        
+        var self = KellyProfileJoyreactorUnlock;
+        if (self.unlockPool.requestController || ids.length <= 0) return false;
+   
+        self.unlockPool.requestController = self.getUnlockController();        
+        self.unlockPool.requestController.callback = function(unlockedData) {
+                onReady(ids, unlockedData);
+                self.unlockPool.requestController = false;        
+                
+            };
+            
+        self.unlockPool.requestController.request(self.getQueryPost(ids, self.unlockPool.tpl));
+        return true;
+    },
+        
+    unlockPostListDelayed : function(delay, onReady) {
         
         var self = KellyProfileJoyreactorUnlock, ids = [];
                 
@@ -384,20 +420,10 @@ var KellyProfileJoyreactorUnlock = {
             ids.push(postId);
         }     
         
-        if (self.unlockPool.requestController || ids.length <= 0) return;
-   
-        var query = "", queryPost = self.getTpl(self.unlockPool.tpl);
-        for (var i = 0; i < ids.length; i++) query += "\\n " + "node" + (i + 1) + ":node(id : \\\"" + window.btoa('Post:' + ids[i]) + "\\\") {" + queryPost.replace(/(?:\r\n|\r|\n)/g, '') + "}";
-        
-        self.unlockPool.requestController = self.getUnlockController();
-        
-        self.unlockPool.requestController.callback = function(unlockedData) {
-                self.onPoolUnlockedDataReady(ids, unlockedData, self.unlockPool.pool);
-                self.unlockPool.requestController = false;        
-                self.unlockPool.pool = {};
-            };
-            
-        self.unlockPool.requestController.request(query);  
+        return self.unlockPostList(ids, function(ids, unlockedData) {
+            self.onPoolUnlockedDataReady(ids, unlockedData, self.unlockPool.pool);
+            self.unlockPool.pool = {};
+        });
     },
     
     formatCensoredPost : function(postBlock, forceData) {
