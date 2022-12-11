@@ -24,7 +24,7 @@ var KellyProfileJoyreactorUnlock = {
         typeNames : {'NEW' : 'Новое', 'GOOD' : 'Хорошее', 'BEST' : 'Лучшее', 'ALL' : 'Бездна'},
         
         page : 1, // current selected page in pager
-        perPage : 20, 
+        perPage : 10, // returned by api, used for count, dont change
         
         tagData : false, // last loaded tag data
         type : 'GOOD', // current pager listing type
