@@ -2,6 +2,9 @@
 // JoyReactor environment driver
 
 var KellyProfileTopJoyreactor = new Object();
+
+    KellyProfileTopJoyreactor.SafeMode = true; // Mobile version is recently updated, so disable add to FAV features and additional hooks, to prevent unexpected results for now
+    
     KellyProfileTopJoyreactor.create = function() {
         
         KellyProfileTopJoyreactor.self = new KellyProfileJoyreactor();   
@@ -294,7 +297,12 @@ var KellyProfileTopJoyreactor = new Object();
                 }
             }
             
-            handler.initFetchHook(function() { addReady('initFetchHook'); });
+            if (!KellyProfileTopJoyreactor.SafeMode) handler.initFetchHook(function() { addReady('initFetchHook'); });
+            else {
+                console.log('initOnLoad : - IGNORE HOOKS, post formating is imposible');
+                addReady('initFetchHook - SKIP');
+            }
+            
             handler.fav.load('cfg', function(fav) {
                 
                 if (fav.coptions.disabled) return;
@@ -326,7 +334,7 @@ var KellyProfileTopJoyreactor = new Object();
                 
                 handler.fav.load('items', function() { addReady('User fav image gallery loading'); });   
             });   
-                
+            
             if (handler.getPosts().length > 0) {
                 addReady('Server side - Page ready');
             } else {
