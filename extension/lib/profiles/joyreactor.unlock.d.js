@@ -45,7 +45,7 @@ KellyEDJRUnlocker.initDRequest = function() {
                             "responseHeaders" : [
                                  { "header": "Access-Control-Allow-Origin", "operation": "set", "value": KellyTools.getLocationFromUrl(tabData.port.sender.tab.url).origin}, 
                                  { "header": "Access-Control-Allow-Credentials", "operation": "set", "value": "true" },
-                                 { "header": "Access-Control-Allow-Headers", "operation": "set", "value": "Content-Type" },
+                                 { "header": "Access-Control-Allow-Headers", "operation": "set", "value": "Origin, X-Requested-With, Content-Type, Accept" },
                             ],
                         },
                         
@@ -99,7 +99,7 @@ KellyEDJRUnlocker.initWebRequest = function() {
            
            KellyTools.wRequestSetHeader(e.responseHeaders, "Access-Control-Allow-Origin", url);
            KellyTools.wRequestSetHeader(e.responseHeaders, 'Access-Control-Allow-Credentials', "true");
-           KellyTools.wRequestSetHeader(e.responseHeaders, 'Access-Control-Allow-Headers', "Content-Type"); 
+           KellyTools.wRequestSetHeader(e.responseHeaders, 'Access-Control-Allow-Headers', "Origin, X-Requested-With, Content-Type, Accept"); 
                            
            // console.log(e.responseHeaders)
            KellyTools.log(e.url + ' [JOYREACTOR UNLOCKER] [Modify RECEIVED HEADERS]');
@@ -116,6 +116,12 @@ KellyEDJRUnlocker.init = function() {
     KellyEDispetcher.api.storage.local.get(cfgName, function(item) {
     
         KellyEDJRUnlocker.cfg = item && item[cfgName] && item[cfgName]['coptions'] ? item[cfgName]['coptions'] : KellyEDJRUnlocker.defaultCfg;
+        
+        if (KellyEDJRUnlocker.cfg.unlock && !KellyEDJRUnlocker.cfg.unlock.mreact) {
+            KellyTools.log('[JOYREACTOR UNLOCKER] [Globaly disabled]');
+            KellyEDJRUnlocker.enabled = true;
+            return;
+        }
         
         if (KellyTools.getManifestVersion() > 2) {
             KellyEDJRUnlocker.initDRequest();

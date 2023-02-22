@@ -306,7 +306,8 @@ var KellyProfileTopJoyreactor = new Object();
             handler.fav.load('cfg', function(fav) {
                 
                 if (fav.coptions.disabled) return;
-                
+                if (fav.coptions.unlock && !fav.coptions.unlock.mreact) return;
+    
                 handler.unlockUnsafe = false;
                 if (fav.coptions.unlock && fav.coptions.unlock.unsafe) {
                      handler.unlockUnsafe = true;

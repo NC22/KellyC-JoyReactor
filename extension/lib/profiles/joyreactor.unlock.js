@@ -1087,6 +1087,7 @@ var KellyProfileJoyreactorUnlock = {
             if (typeof data.coptions.unlock.tv == 'undefined') data.coptions.unlock.tv = true;   
             if (typeof data.coptions.unlock.lastTv == 'undefined') data.coptions.unlock.lastTv = 'Этти';
             if (typeof data.coptions.unlock.tvAny == 'undefined') data.coptions.unlock.tvAny = false;
+            if (typeof data.coptions.unlock.mreact == 'undefined') data.coptions.unlock.mreact = true;
             
             console.log(data.coptions.unlock);
             
@@ -1104,6 +1105,9 @@ var KellyProfileJoyreactorUnlock = {
             optionsManager.cfgInput['unlock_unlockCensoredShowTV_Any'] = {name : 'tvAny', parent : 'unlock', loc : 'unlock_censored_showtv_any', type : 'bool', default : false};
             // optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAuth'] = {name : 'auth', parent : 'unlock', loc : 'unlock_censored_auth', type : 'bool', default : true};
+            
+            optionsManager.cfgInput['unlock_unlockMreact'] = {name : 'mreact', parent : 'unlock', loc : 'unlock_mreact', type : 'bool', default : true};            
+            // tabData['Other'].parts['_common'].push('unlock_mreact');
         }      
         return this;
     },
