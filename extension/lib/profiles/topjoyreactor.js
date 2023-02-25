@@ -346,8 +346,8 @@ var KellyProfileTopJoyreactor = new Object();
                 var link = KellyTools.getRelativeUrl(handler.getCommentLink(comments[i]));
                 if (!link) continue;
                 
-                var addToFavButton = comments[i].getElementsByClassName(handler.className + '-addToFavComment');            
-                if (!addToFavButton.length) {
+                var addToFavButton = comments[i].getElementsByClassName(handler.className + '-addToFavComment')[0];            
+                if (!addToFavButton) {
             
                     var bottomLink = comments[i].getElementsByClassName('comment-link');
 
@@ -355,9 +355,10 @@ var KellyProfileTopJoyreactor = new Object();
                     addToFavButton.href = '#';
                     addToFavButton.className = handler.hostClass + ' ' + handler.className + '-addToFavComment';
                     bottomLink[0].parentNode.insertBefore(addToFavButton, bottomLink[0].nextSibling);                     
-                }         
+                }
                 
                 handler.updateCommentAddToFavButtonState(block, comments[i], link);
+                if (KellyTools.getViewport().screenWidth < 1080) addToFavButton.innerHTML = '';
             }
             
             KellyTools.log('formatComments : ' + comments.length + ' - '+ block.id);

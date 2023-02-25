@@ -155,7 +155,11 @@ table.__BASECLASS__-options-table input[type="submit"] {
 
 /* top.reactor */
 
-.__BASECLASS__-top-joyreactor-cc .kelly-jr-ui-PreviewText-container {
+#root>div.__BASECLASS__-top-joyreactor-cc.__BASECLASS__-sidebar-wrap {
+    width : auto;
+}
+
+.dark .__BASECLASS__-top-joyreactor-cc .kelly-jr-ui-PreviewText-container {
     background: #666666;
 }
 
@@ -391,6 +395,43 @@ table.__BASECLASS__-options-table input[type="submit"] {
     width: max-content;
     margin-top: 19px;
 }
+
+@media (max-width: 1000px) {
+    
+    #submenu.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-icon {
+        width: 25px;
+        height: 25px;
+        background-size: 20px;
+        top: 10px;
+    }
+    
+    .__BASECLASS__-top-joyreactor-cc.__BASECLASS__-addToFavComment {
+        background: #d6d6d6;
+        width: 28px;
+        height: 28px;
+        border-radius: 16px;
+    }
+    
+   .__BASECLASS__-top-joyreactor-cc.__BASECLASS__-addToFavComment:after {
+        background: rgb(86, 86, 86);
+        width: 12px;
+        height: 12px;
+        left: 8px;
+    }
+    
+    .__BASECLASS__-top-joyreactor-cc.__BASECLASS__-addToFavComment {
+        margin-left: 0px;
+    }
+    
+    #submenu.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-MainMenuItem.kelly-jr-ui-MainMenuItem-iconed,  
+    #submenu.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-MainMenuItem.kelly-jr-ui-MainMenuItem-fav {
+        margin-left: 4px;
+        margin-right: 0;
+    }
+
+}
+
+/* top.reactor */
 
 .jras-pcLinks-img .__BASECLASS__-post-FavAdd {
     display : none;

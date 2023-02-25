@@ -57,7 +57,7 @@ function KellyProfileJoyreactor() {
             referrer : handler.location.protocol  + '//' + handler.location.domain + '/',
             hostList : handler.hostList,
             types : ['xmlhttprequest'],            
-            urlMap : [['https://api.joyreactor.cc/graphql?unlocker=1', 'https://api.joyreactor.cc', {'Origin' : 'https://api.joyreactor.cc'}, {'Access-Control-Allow-Headers' : 'Content-Type'}]],
+            urlMap : [['https://api.joyreactor.cc/graphql?unlocker=1', 'https://api.joyreactor.cc', {'Origin' : 'https://api.joyreactor.cc'}, {'Access-Control-Allow-Headers' : 'Content-Type', 'Access-Control-Allow-Origin' : '*'}]],
         }
         
         handler.hostClass = handler.className + '-' + hostParts.join("-");
