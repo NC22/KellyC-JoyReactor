@@ -183,11 +183,16 @@ table.__BASECLASS__-options-table input[type="submit"] {
 }
 
 #submenu.__BASECLASS__-top-joyreactor-cc {
-    height: 32px;
     white-space: nowrap;
     display : inline-block;
     float : right;
     color: #8b857b;
+}
+
+#submenu.__BASECLASS__-top-joyreactor-cc,
+.__BASECLASS__-top-joyreactor-cc.__BASECLASS__-MainMenuItem.__BASECLASS__-MainMenuItem-iconed,
+.__BASECLASS__-top-joyreactor-cc.__BASECLASS__-MainMenuItem.__BASECLASS__-MainMenuItem-fav {
+	height: 46px;
 }
 
 #submenu.__BASECLASS__-top-joyreactor-cc a{
@@ -294,7 +299,7 @@ table.__BASECLASS__-options-table input[type="submit"] {
 .__BASECLASS__-top-joyreactor-cc a.__BASECLASS__-FavItem-collection,
 .__BASECLASS__-top-joyreactor-cc a.__BASECLASS__-FavItem-overlay-button,
 .__BASECLASS__-top-joyreactor-cc .__BASECLASS__-preview-text {
-    background: #5d5d5d;
+    background: #fca91a;
 }
 
 .__BASECLASS__-top-joyreactor-cc .__BASECLASS__-FiltersMenu > li > button {
@@ -307,9 +312,25 @@ table.__BASECLASS__-options-table input[type="submit"] {
     display: inline-block;
     vertical-align: middle;
     margin-right: 16px;
+    border-radius: 6px;
+}
+
+.dark .__BASECLASS__-extension-additions {
     background: #878787;
     border-radius: 6px;
     padding: 4px;
+}
+
+.__BASECLASS__-extension-additions .__BASECLASS__-fast-save, .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
+    color: #1e1e1e;
+}
+
+.dark .__BASECLASS__-extension-additions .__BASECLASS__-fast-save, .dark .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
+    color: #ffffff;
+}
+
+.dark .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
+    border-bottom: #fff solid 3px;
 }
 
 .__BASECLASS__-extension-additions .__BASECLASS__-fast-save, .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
@@ -319,13 +340,12 @@ table.__BASECLASS__-options-table input[type="submit"] {
     font-weight : normal;
     padding: 0;
     margin: 0; 
-    color: #ffffff;
-    margin-left: 3px;
-    margin-right: 3px;  
+    margin-left: 2px;
+    margin-right: 2px;  
 }
 
 .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
-    border-bottom: #fff solid 3px;
+    border-bottom: #1e1e1e solid 3px;
     text-decoration: none;
 }
 
