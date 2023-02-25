@@ -7,14 +7,10 @@ var KellyProfileTopJoyreactor = new Object();
         KellyProfileTopJoyreactor.self = new KellyProfileJoyreactor();   
         var handler = KellyProfileTopJoyreactor.self;
         
-        handler.mainContainerClass = 'content-container';
-        
+        handler.mainContainerClass = 'content-container';        
         handler.postClassName = 'post-card';
         
-        handler.webRequestsReady = false;
-        handler.onWebRequestReadyE = [];
-        
-        handler.addToFavDropdown = false;
+        handler.addToFavDropdown = false; handler.addToFavDropdownPost = false;
         
         handler.events.onPageReadyOrig = handler.events.onPageReady;
         handler.events.onExtensionReady = function() {
@@ -23,36 +19,35 @@ var KellyProfileTopJoyreactor = new Object();
                handler.unlockManager.initTagViewer();
                handler.unlockManager.tagViewer.openInCurrentTab = false; // need to add post-maket tpl special for m. html publications structure before
            }
-            
+           
+           var formatPostWait = function() { // format post modal box when target post & target modal box detected
+               if (handler.addToFavDropdownPost && handler.addToFavDropdown) {
+                    handler.formatPostContainer(handler.addToFavDropdownPost);
+                    handler.addToFavDropdownPost = false;
+               }
+           }
+           
            document.addEventListener('click', function (e) {
-                
                 var dropdownButton = KellyTools.getParentByClass(e.target, 'ant-dropdown-trigger');
                 if (dropdownButton) {
-                    
-                    var tryFormat = function(at, post) {
-                        
-                        at--;
-                        setTimeout(function() {
-                            var dropdown = document.body.querySelectorAll('.ant-dropdown-placement-top');                        
-                            for (var i = 0; i < dropdown.length; i++) {
-                                
-                               if (!dropdown[i].classList.contains('ant-dropdown-hidden')) {
-                                   handler.addToFavDropdown = dropdown[i];
-                                   handler.formatPostContainer(post);
-                                   return true;
-                               }
-                            }
-                            
-                            if (at) tryFormat(at, post);
-                        }, 350);
-                    }    
-                    
-                    var post = KellyTools.getParentByClass(e.target, handler.postClassName);
-                    if (post) tryFormat(2, post);
+                    handler.addToFavDropdownPost = KellyTools.getParentByClass(e.target, handler.postClassName);
+                    formatPostWait();
                 }
-                
-            });
+            });            
             
+            handler.observerModals = new MutationObserver(function(mutations) {
+                for (var i = 0; i < mutations.length; i++) {
+                    
+                    var item = KellyTools.searchNode(mutations[i].addedNodes, 'DIV');
+                    if (item !== false && item.innerHTML.indexOf('ant-dropdown') != -1) {
+                        handler.addToFavDropdown = item.querySelector('.ant-dropdown');
+                        formatPostWait();
+                    }
+                }              
+            });
+
+            handler.observerModals.observe(document.body, {childList: true});
+
             setTimeout(handler.updateSidebarConfig, 400);
         };
         
@@ -69,26 +64,12 @@ var KellyProfileTopJoyreactor = new Object();
             //console.log(pointer);
         }
         
-        /* 
-           
-           Calls when all web request hooks initialized in background
-           We collect all window.fetch request untill then and place them in to pool - handler.onWebRequestReadyE, to procced when webRequests ready
-           
+        /*        
+           method == 'registerDownloader' 
+           Calls when all web request hooks initialized in background. We can miss several calls because extension cant load imidiatly and blocking page loading           
         */
         
-        handler.events.onWebRequestReady = function(method, data) {
-            
-            if (method == 'registerDownloader' && !handler.webRequestsReady) {
-                
-                clearTimeout(handler.failBGTimer);
-                KellyTools.log('webRequests ready | Delayed events : ' + handler.onWebRequestReadyE.length);
-                handler.webRequestsReady = true;
-                
-                for (var i = 0; i < handler.onWebRequestReadyE.length; i++) {
-                   handler.onWebRequestReadyE[i][0].postMessage(handler.onWebRequestReadyE[i][1], window.location.origin);                    
-                }
-            }
-        }
+        handler.events.onWebRequestReady = function(method, data) {}
         
         /*
             
@@ -153,19 +134,6 @@ var KellyProfileTopJoyreactor = new Object();
                 
                 handler.fav.initBgEvents();
                 
-                /* too long conection to local bg process, something wrong. manifest v3 serwice workers currently glithy as fuck */
-                
-                handler.failBGTimer = setTimeout(function() {
-                    KellyTooltip.autoloadCss = handler.className + '-tooltipster';
-                    var tooltip = handler.fav.getTooltip();
-                    tooltip.resetToDefaultOptions();                        
-                    tooltip.setMessage('Расширение KellyC не смогло корректно инициализировать фоновый процесс, возможны проблемы в обработке контента. Перезагрузите браузер или вкладку. Если проблема повторится, сообщите о проблеме разработчику одним из возможных способов <a href="https://kellydownloader.com/ru/links/issues/" target="_blank" style="color: #ff7600; font-weight: bold;">здесь</a>'); 
-                    tooltip.show(true); 
-                    
-                    handler.fav.tooltipBeasy = true; 
-                    handler.events.onWebRequestReady('registerDownloader', false);
-                }, 2000);
-                
                 handler.fav.load('items', function() { addReady('User fav image gallery loading'); });   
             });   
             
@@ -211,7 +179,16 @@ var KellyProfileTopJoyreactor = new Object();
                 var image = handler.getImageDownloadLink(imageLink, false);
                 if (image) data.push(image);
             }
-            
+                 
+            var videoSrc = content.getElementsByTagName('video');
+            for (var i = 0; i < videoSrc.length; i++) {
+                 
+                var source = videoSrc[i].querySelector('source');
+                if (!source) continue;
+                
+                var image = handler.getImageDownloadLink(source.src, false, 'gif');
+                if (image) data.push(image);
+            }
             return data;
         }
         
@@ -329,7 +306,7 @@ var KellyProfileTopJoyreactor = new Object();
                               
                 KellyTools.classList(action == 'remove_from' ? 'add' : 'remove', addToFav, handler.className + '-post-addtofav-added');
                 
-                textElement.innerText = KellyLoc.s('', action + '_fav') + (handler.addToFavDropdown ? ' [KellyC]' : ''); 
+                textElement.innerText = (handler.addToFavDropdown ? '[KellyC] ' : '') + KellyLoc.s('', action + '_fav'); 
             }         
 
             KellyTools.log('formatPostContainer : ' + postLink.href);

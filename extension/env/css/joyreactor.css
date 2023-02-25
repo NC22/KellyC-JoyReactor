@@ -159,6 +159,10 @@ table.__BASECLASS__-options-table input[type="submit"] {
     width : auto;
 }
 
+.__BASECLASS__-body-open-dropdown .ant-dropdown-placement-top {
+    min-height : 162px;
+}
+
 .dark .__BASECLASS__-top-joyreactor-cc .kelly-jr-ui-PreviewText-container {
     background: #666666;
 }
