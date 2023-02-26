@@ -1089,8 +1089,6 @@ var KellyProfileJoyreactorUnlock = {
             if (typeof data.coptions.unlock.tvAny == 'undefined') data.coptions.unlock.tvAny = false;
             if (typeof data.coptions.unlock.mreact == 'undefined') data.coptions.unlock.mreact = true;
             
-            console.log(data.coptions.unlock);
-            
             KellyProfileJoyreactorUnlock.options = data.coptions;
         }
         
