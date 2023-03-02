@@ -298,7 +298,7 @@ var KellyProfileTopJoyreactor = new Object();
             var link = publication.getElementsByClassName(handler.className + '-post-link')[0];
             if (link) return link;
         
-            link = publication.querySelector('.post-footer a.ant-btn-link'), linkButton = publication.querySelector('.post-footer button.ant-dropdown-trigger');
+            link = publication.querySelector('.post-footer a'), linkButton = publication.querySelector('.post-footer button.ant-dropdown-trigger');
             if (!link && linkButton) { // user is logged-in - post id \ link is hidden in [...] and not accessable until click. Post link will be updated on [click] on [...]
             
                 link = document.createElement('A');
