@@ -71,23 +71,21 @@ var KellyProfileTopJoyreactor = new Object();
             handler.observer = new MutationObserver(function(mutations) {
                 
                 for (var i = 0; i < mutations.length; i++) {
-
-                   if (mutations[i].target.classList.contains('content')) {
+                    
+                   if (mutations[i].target.classList.contains('content')) { // separate post updated (?)
+                       
                         var post = KellyTools.getParentByClass(mutations[i].target, handler.postClassName);
-                        if (post) {
-                            handler.formatComments(post); // todo add delay
-                        }
+                        if (post) handler.formatComments(post);
                         
                         return;
                         
                    } else if ( 
-                        KellyTools.searchNode(mutations[i].addedNodes, false, 'content-container') ||
-                        KellyTools.searchNode(mutations[i].addedNodes, false, 'jr-container') ||
+                        KellyTools.searchNode(mutations[i].addedNodes, false, handler.mainContainerClass) ||
+                        KellyTools.searchNode(mutations[i].addedNodes, false, handler.postClassName) ||
                         (mutations[i].target.classList.contains(handler.mainContainerClass) && mutations[i].addedNodes.length > 0)
-                    ) {
+                    ) { // page update (added new post or main container modified)
                         
-                       handler.getMainContainers();
-                   
+                       handler.getMainContainers();                   
                        KellyTools.log('Page updated, format publications');
                                             
                        if (handler.fav.getGlobal('mode') == 'main') handler.fav.closeSidebar();
@@ -106,8 +104,7 @@ var KellyProfileTopJoyreactor = new Object();
                         handler.fav.closeSidebar();
                         KellyTools.log('Page publications removed');
                         return;
-                   }
-                   
+                   }                   
                 }
             });
             
