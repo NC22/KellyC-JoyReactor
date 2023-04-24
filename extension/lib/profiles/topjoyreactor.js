@@ -8,12 +8,15 @@ var KellyProfileTopJoyreactor = new Object();
         var handler = KellyProfileTopJoyreactor.self;
         
         handler.mainContainerClass = 'content-container';        
-        handler.postClassName = 'post-card';
+        handler.postClassName = 'post-card';        
         
+        handler.customTpl = {};
         handler.addToFavDropdown = false; handler.addToFavDropdownPost = false;
         
         handler.initOnLoad = function(onLoad) {
             
+            handler.hostClass = handler.className + '-' + 'top-joyreactor-cc'; // currently keeped one for all new engine domains, check additionaly handler.location if needed
+        
             // wait while 1. config ready + 2. page rendered by react (cookreactor not marks html by loading class + have old selectors)
             
             var ready = 0;
@@ -22,12 +25,17 @@ var KellyProfileTopJoyreactor = new Object();
                 ready += n ? n : 1;                  
                 console.log('initOnLoad : ' + loadStageName + ' (' + ready + ')' + ' - DONE'); 
                 
-                if (ready == 2) {
+                if (ready == 3) {
                     console.log('initOnLoad : - DONE'); 
                     onLoad();
                 }
             }
             
+            KellyTools.getBrowser().runtime.sendMessage({method: "getResources", asObject : true, items : ['joyreactorTopAddToFavBtn', 'joyreactorTopAddToFavBtnAdded'], itemsRoute : {type : 'html'}}, function(request) {
+                 handler.customTpl = request.data.loadedData; 
+                 addReady('getResources - ready'); 
+            });
+
             handler.fav.load('cfg', function(fav) {
                 
                 if (fav.coptions.disabled) return;
@@ -65,6 +73,8 @@ var KellyProfileTopJoyreactor = new Object();
         
             handler.observer.observe(document.documentElement, {childList: true, subtree: true});
         }
+        
+        // method that detects [...] joyreactor popup menu show - possibly not be needed in future, cause currently this popup is not used
         
         handler.initUpdateWatcher = function() {
             
@@ -113,8 +123,6 @@ var KellyProfileTopJoyreactor = new Object();
     
         handler.getMainContainers = function() {
             
-            handler.hostClass = handler.className + '-' + 'top-joyreactor-cc';        
-              
             if (!handler.mContainers) {
                 
                 handler.mContainers = { 
@@ -338,6 +346,13 @@ var KellyProfileTopJoyreactor = new Object();
                 
             } else if (!coptions.hideAddToFav) {                
                 
+                var postIndex = handler.fav.getStorageManager().searchItem(handler.fav.getGlobal('fav'), {link : link, commentLink : false});
+                var action = postIndex !== false ? 'remove_from' : 'add_to';  
+                var onAction = function(remove) {
+                    if (remove) handler.fav.closeSidebar();
+                    handler.formatPostContainer(postBlock); 
+                }
+                
                 if (handler.addToFavDropdown) {
                     
                     var addToFav = KellyTools.getElementByClass(handler.addToFavDropdown, handler.className + '-post-addtofav-dropdown');        
@@ -350,27 +365,22 @@ var KellyProfileTopJoyreactor = new Object();
                     }
                     
                     var textElement = addToFav.querySelector('span:nth-child(2)');
-                    
+                        textElement.innerText = '[KellyC] ' + KellyLoc.s('', action + '_fav'); 
+                        
                 } else {
                         
                     var addToFav = KellyTools.getElementByClass(postBlock, handler.className + '-post-addtofav');        
                     if (!addToFav) {               
                         addToFav = document.createElement('a');
                         addToFav.href = postLink.href;
-                        addToFav.className = handler.className + '-post-addtofav';
+                        addToFav.className = handler.className + '-post-addtofav ' + handler.className + '-post-addtofav-as-icon';
+                        addToFav.setAttribute('title', '[KellyC] ' + KellyLoc.s('', action + '_fav'));
                         buttonsBlock.appendChild(addToFav);
                     }
                     
-                    var textElement = addToFav;
+                    KellyTools.setHTMLData(addToFav, handler.customTpl[action == 'remove_from' ? 'joyreactorTopAddToFavBtn' : 'joyreactorTopAddToFavBtnAdded'].data); 
                 }
-                
-                var postIndex = handler.fav.getStorageManager().searchItem(handler.fav.getGlobal('fav'), {link : link, commentLink : false});
-                var action = postIndex !== false ? 'remove_from' : 'add_to';  
-                var onAction = function(remove) {
-                    if (remove) handler.fav.closeSidebar();
-                    handler.formatPostContainer(postBlock); 
-                }
-                
+                                
                 addToFav.onclick = function() { 
                     handler.fav.showAddToFavDialog(action == 'remove_from' ? postIndex : postBlock, false, onAction, function() {onAction(true)});
                     return false; 
@@ -378,7 +388,6 @@ var KellyProfileTopJoyreactor = new Object();
                               
                 KellyTools.classList(action == 'remove_from' ? 'add' : 'remove', addToFav, handler.className + '-post-addtofav-added');
                 
-                textElement.innerText = (handler.addToFavDropdown ? '[KellyC] ' : '') + KellyLoc.s('', action + '_fav'); 
             }
 
             // KellyTools.log('formatPostContainer : ' + postLink.href);

@@ -713,10 +713,11 @@ var KellyProfileJoyreactorUnlock = {
         self.tagViewerRequestController.cfg = self.tagViewer; 
         self.tagViewerRequestController.callback = function(unlockedData) {
                                     
-                if (!unlockedData || !unlockedData.data || !unlockedData.data['tagData1']) {                      
-                    console.log('fail to get tag data');
-                    
+                if (!unlockedData || !unlockedData.data || !unlockedData.data['tagData1']) {    
+                
+                    console.log('fail to get tag data');                    
                     console.log(unlockedData); 
+                    
                     self.tagViewerRequestController.errorText = 'Публикаций не найдено. Проверьте корректность названия тега';
                             
                     if (onload) onload(false);
@@ -727,7 +728,7 @@ var KellyProfileJoyreactorUnlock = {
                 self.tagViewer.tagData = tagData;
                 
                 self.tagViewer.tagData.pageCount = Math.ceil(tagData.postPager.count / self.tagViewer.perPage);
-                if (newPage > self.tagViewer.tagData.pageCount) {
+                if (self.tagViewer.page > self.tagViewer.tagData.pageCount) {
                     
                     if (tagData.postPager.count == 0) {
                     
@@ -748,6 +749,7 @@ var KellyProfileJoyreactorUnlock = {
                      
                  self.handler.getMainContainers().siteContent.innerHTML = '';
                  self.handler.getMainContainers().siteContent.appendChild(postList);
+                 
                  postList.classList.add(self.handler.hostClass);
                  postList.classList.add(self.handler.className + '-tagViewerPostList');
                  
@@ -829,9 +831,8 @@ var KellyProfileJoyreactorUnlock = {
                  
                 self.renderCopyright(postList);
                 onload(unlockedData, postList);
-                
-                
             };
+            
             self.tagViewerRequestController.request(query);
     },
     

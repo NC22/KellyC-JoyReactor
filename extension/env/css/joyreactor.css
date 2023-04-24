@@ -163,6 +163,31 @@ table.__BASECLASS__-options-table input[type="submit"] {
     min-height : 162px;
 }
 
+.__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav.__BASECLASS__-post-addtofav-as-icon {
+    
+    text-decoration: none;
+    border-bottom: none;
+    background: rgba(255, 98, 0, 0.8);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 3px;
+    transition: 0.3s background;
+}
+
+.__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav.__BASECLASS__-post-addtofav-as-icon:hover, 
+.__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav.__BASECLASS__-post-addtofav-as-icon.__BASECLASS__-post-addtofav-added {
+    background: rgba(255, 98, 0, 1);
+}
+
+.__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav.__BASECLASS__-post-addtofav-as-icon svg {
+    display: inline-block;
+    vertical-align: middle!important;
+    fill: #fff;
+}
+
 .dark .__BASECLASS__-top-joyreactor-cc .kelly-jr-ui-PreviewText-container {
     background: #666666;
 }
@@ -324,9 +349,6 @@ table.__BASECLASS__-options-table input[type="submit"] {
 }
 
 .dark .__BASECLASS__-extension-additions {
-    background: #878787;
-    border-radius: 6px;
-    padding: 4px;
 }
 
 .__BASECLASS__-extension-additions .__BASECLASS__-fast-save, .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
@@ -335,10 +357,6 @@ table.__BASECLASS__-options-table input[type="submit"] {
 
 .dark .__BASECLASS__-extension-additions .__BASECLASS__-fast-save, .dark .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
     color: #ffffff;
-}
-
-.dark .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
-    border-bottom: #fff solid 3px;
 }
 
 .__BASECLASS__-extension-additions .__BASECLASS__-fast-save, .__BASECLASS__-extension-additions .__BASECLASS__-post-addtofav {
@@ -401,6 +419,10 @@ table.__BASECLASS__-options-table input[type="submit"] {
 }
 
 @media (max-width: 1000px) {
+    
+    .__BASECLASS__-extension-additions {
+        margin-right : 0;
+    }
     
     #submenu.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-icon {
         width: 25px;
