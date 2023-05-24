@@ -2,7 +2,7 @@ var KellyProfileJoyreactorUnlock = {
     
     // this.handler = env profile object
     
-    postMaxHeight : 2000, cacheLimit : 400, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
+    postMaxHeight : 2000, cacheLimit : 400, cacheDataVersion : 2, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
     tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],    
     authData : {token : false}, initEvents : [],    
     unlockPool : {
@@ -99,16 +99,19 @@ var KellyProfileJoyreactorUnlock = {
         return url ? url + '-' : 'post-';
     },
     
-    getPublicationAttributesHtml : function(data, htmlContext, isComment, urlPrefix) {
+    getPublicationAttributesHtml : function(isComment, urlPrefix, publication) {
         
         if (!urlPrefix) urlPrefix = 'postnun-';
         
-        var html = '', type = isComment ? 'comment' : 'post', self = this;
-        if (!data) return html;
+        var attributes = publication.attributes;
+        var htmlContext = publication.text;
         
+        var html = '', type = isComment ? 'comment' : 'post', self = this;
+        
+        if (!attributes) return html;
         var itemN = 0, attributeHolders = htmlContext && htmlContext.indexOf('&attribute_insert_') != -1;
                 
-        data.forEach(function(attributeData) {
+        attributes.forEach(function(attributeData) {
             var itemHtml = ''; itemN++;
             if (attributeData.type != 'PICTURE') {
                 if (['YOUTUBE', 'COUB'].indexOf(attributeData.type) != -1)  itemHtml = self.getTpl('att-' + attributeData.type.toLowerCase(), { VALUE : attributeData.value});
@@ -127,9 +130,19 @@ var KellyProfileJoyreactorUnlock = {
         
         var resultHtml = htmlContext + html;
         
-        if (resultHtml.indexOf('attribute_insert_') != -1) {
+        if (!isComment) {
+
+            if (resultHtml.indexOf('attribute_insert_') != -1) {
+                
+                resultHtml += '<b>Ошибка чтения. Возможно часть контента была вырезана администрацией полностю</b>';
+                
+            } else if (attributes.length <= 0 && self.isCensoredData(publication)) {
+                
+                resultHtml = '<b>Ошибка чтения</b><br>Реактор вернул все еще зацензуренный пост.\
+                              Попробуйте временно использовать функцию просмотра тега напрямую в \
+                              шапке [<span class="' + self.handler.className + '-icon-tag" style="width: 21px;height: 21px; display: inline-block;background-size: 21px;background-repeat: no-repeat;"></span>]';
+            }
             
-            resultHtml += '<b>Ошибка чтения. Возможно часть контента была вырезана администрацией полностю :(</b>';
         }
             
         return resultHtml;
@@ -150,7 +163,7 @@ var KellyProfileJoyreactorUnlock = {
     },
     
     cacheReset : function() {
-        this.options.unlock.cacheData = {ids : [], data : []}; 
+        this.options.unlock.cacheData = {ids : [], data : [], version : this.cacheDataVersion}; 
     },
     
     cacheUpdate : function(ids, data) {
@@ -173,6 +186,13 @@ var KellyProfileJoyreactorUnlock = {
             
             if (!data || !data['node' + (i + 1)]) continue;
             var cachePost = data['node' + (i + 1)]; // clone \ duplicate if you needed original object for something in future
+            
+            if (this.isCensoredData(cachePost)) {
+                console.log('skip censored post cache new item');
+                console.log(cachePost);
+                continue;
+            }
+            
             if (cachePost.comments) delete cachePost.comments;
             
             var cachePostInKbs = JSON.stringify(cachePost).length / 1000;
@@ -324,7 +344,7 @@ var KellyProfileJoyreactorUnlock = {
             }
             
             if (poolItem.mediaBlock) {
-                KellyTools.setHTMLData(poolItem.mediaBlock, self.getTpl('post', {PICS : self.getPublicationAttributesHtml(postUnlockedData.attributes, postUnlockedData.text, false, urlPrefix), COUNT : postUnlockedData.attributes.length})); 
+                KellyTools.setHTMLData(poolItem.mediaBlock, self.getTpl('post', {PICS : self.getPublicationAttributesHtml(false, urlPrefix, postUnlockedData), COUNT : postUnlockedData.attributes.length})); 
                 self.updatePostBounds(poolItem.postBlock, poolItem.mediaBlock); 
             }
             
@@ -339,7 +359,7 @@ var KellyProfileJoyreactorUnlock = {
                         var meAuthor = KellyTools.val(self.getNodeId(comment.user.id), 'int') == self.authData.userId ? true : false;
                         
                         htmlComments += self.getTpl('comment', { 
-                            PICS : self.getPublicationAttributesHtml(comment.attributes, comment.text, true, urlPrefix), 
+                            PICS : self.getPublicationAttributesHtml(true, urlPrefix, comment), 
                             USER_NAME : comment.user.username, 
                             USER_ID : self.getNodeId(comment.user.id),
                             POST_ID : postId,                        
@@ -457,7 +477,9 @@ var KellyProfileJoyreactorUnlock = {
                 
                 if (success) {
                     self.handler.formatPostContainer(unlockData.postBlock);
-                    if (!forceData) self.renderCopyright(unlockData.postBlock);
+                    if (!forceData) {
+                        // self.renderCopyright(unlockData.postBlock);
+                    }
                 }
                 
                 if (success && unlockData.initiator) {
@@ -518,7 +540,7 @@ var KellyProfileJoyreactorUnlock = {
                         delete self.unlockPool.pool[postId];
                         
                         self.handler.formatPostContainer(postBlock);
-                        self.renderCopyright(postBlock);
+                        // self.renderCopyright(postBlock);
                         
                         KellyTools.log('Unlock : restore from cache ' + postId, KellyTools.E_NOTICE);
                         
@@ -532,6 +554,15 @@ var KellyProfileJoyreactorUnlock = {
     isCensored : function(post) {
         if (post.innerHTML.indexOf(this.handler.className + '-censored') != -1) return false;
         if (post.innerHTML.indexOf('/images/censorship') != -1 || post.innerHTML.indexOf('/images/unsafe_ru') != -1) return true;
+        return false;
+    },
+    
+    isCensoredData : function(postData) {
+        
+        if (postData.text && postData.text.indexOf('images/censorship') != -1) {
+            return true;
+        }
+        
         return false;
     },
     
@@ -648,8 +679,20 @@ var KellyProfileJoyreactorUnlock = {
     formatCensoredPosts : function() {
         
         if (!this.options.unlock.censored) return;        
-        if (!this.options.unlock.cache || typeof this.options.unlock.cacheData == 'undefined') this.cacheReset();
+      
+        if (!this.options.unlock.cache || typeof this.options.unlock.cacheData == 'undefined') {
+         
+            this.cacheReset();
+
+        } else if (typeof this.options.unlock.cacheData != 'undefined' && this.options.unlock.cacheData.version != this.cacheDataVersion) {
+            
+            console.log('incompatible cache. reset');
+            this.cacheReset();
+        }
         
+        
+            console.log(this.options.unlock.cacheData);
+            
         this.unlockPool.tpl = 'query-post';
         var censoredData = this.getCensored();
         if (censoredData.length > 0) this.initWorkspace(function() {

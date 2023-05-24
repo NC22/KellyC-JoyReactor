@@ -74,8 +74,6 @@ var KellyProfileTopJoyreactor = new Object();
             handler.observer.observe(document.documentElement, {childList: true, subtree: true});
         }
         
-        // method that detects [...] joyreactor popup menu show - possibly not be needed in future, cause currently this popup is not used
-        
         handler.initUpdateWatcher = function() {
             
             handler.observer = new MutationObserver(function(mutations) {
@@ -172,6 +170,10 @@ var KellyProfileTopJoyreactor = new Object();
                handler.unlockManager.tagViewer.openInCurrentTab = false; // need to add post-maket tpl special for m. html publications structure before
            }
            
+           // method that detects [...] joyreactor popup menu show - possibly not be needed in future, cause currently this popup is not used
+           
+           /*
+           
            var formatPostWait = function() { // format post modal box when target post & target modal box detected
                 
                 if (handler.addToFavDropdownPost) {
@@ -216,6 +218,8 @@ var KellyProfileTopJoyreactor = new Object();
 
             handler.observerModals.observe(document.body, {childList: true});
 
+            */
+            
             setTimeout(handler.updateSidebarConfig, 400);
         };
         
