@@ -553,7 +553,14 @@ var KellyProfileJoyreactorUnlock = {
     
     isCensored : function(post) {
         if (post.innerHTML.indexOf(this.handler.className + '-censored') != -1) return false;
-        if (post.innerHTML.indexOf('/images/censorship') != -1 || post.innerHTML.indexOf('/images/unsafe_ru') != -1) return true;
+                
+        var cImage = post.getElementsByTagName('img');
+        for (var i = 0; i < cImage.length; i++) {            
+            if (cImage[i].src.indexOf('/images/censorship') != -1 || cImage[i].src.indexOf('/images/unsafe_ru') != -1) {
+                return true;
+            }
+        }
+        
         return false;
     },
     
