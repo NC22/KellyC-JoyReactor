@@ -3,8 +3,36 @@ var KellyProfileJoyreactorUnlock = {
     // this.handler = env profile object
     
     postMaxHeight : 2000, cacheLimit : 400, cacheDataVersion : 2, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
-    tplItems : ['att-image', 'att-youtube', 'att-coub', 'query', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],    
-    authData : {token : false}, initEvents : [],    
+    tplItems : ['tag', 'att-image', 'att-youtube', 'att-coub', 'query', 'query-me', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],    
+    authData : {token : false}, initEvents : [], 
+    me : {
+        loaded : false,
+        meData : {
+            blockedTags : [],
+            blockedUsers : [],
+            blockedTagsInline : '',
+            subscribedTags : [],
+            user : {id : -1},
+        },
+        searchTag : function(name, pool, key) {
+            
+            if (!key) key = 'name';
+            
+            name = name.toLowerCase().trim().normalize();
+            
+            for (var i = 0; i < pool.length; i++) {
+                
+                var tname = pool[i][key].toLowerCase().trim().normalize();
+                if (tname === name) {
+                    return i;
+                }
+            }
+            
+            return -1;
+            
+        },
+        requestController : false,
+    },     
     unlockPool : {
         
         pool : {}, 
@@ -16,8 +44,10 @@ var KellyProfileJoyreactorUnlock = {
         timer : false, // delay timeout before request start
         requestController : false, // request controller
     }, 
+    
     // .tagViewerMenuButton
     // .tagViewerRequestController
+    
     tagViewer : {
         navigation : [] /* todo - last 10 visited tags, filter by posts type, short info in tag header */, 
         
@@ -26,6 +56,12 @@ var KellyProfileJoyreactorUnlock = {
         page : 1, // current selected page in pager
         perPage : 10, // returned by api, used for count, dont change
         
+        tagMeState : {
+            followed : false, 
+            blocked : false,
+        },
+        
+        tagName : false,
         tagData : false, // last loaded tag data
         type : 'GOOD', // current pager listing type
         
@@ -34,6 +70,188 @@ var KellyProfileJoyreactorUnlock = {
         
         maxAttempts : 4,
         reattemptTime : 1.4, 
+        
+        getJRPage : function() {
+            var self = KellyProfileJoyreactorUnlock;
+            return self.tagViewer.tagData ? self.tagViewer.tagData.pageCount - self.tagViewer.page + 1 : 1;
+        }, 
+        
+        getTagTotalPages : function(onready) { // cant find direct way to set page number in query without calc offset, so used this method in cases when specifed page needed be accessed without any cache loaded
+            
+            var self = KellyProfileJoyreactorUnlock;
+            
+            self.tagViewerRequestController = self.getUnlockController(); 
+            self.tagViewerRequestController.cfg = self.tagViewer; 
+            self.tagViewerRequestController.callback = function(unlockedData) {
+            
+                    if (!unlockedData || !unlockedData.data || !unlockedData.data['tagData1']) {    
+                    
+                        console.log('fail to get tag data');                    
+                        console.log(unlockedData);
+
+                        onready(false);
+                        return false;
+                    }
+                    
+                    var tagData = unlockedData.data['tagData1'];
+                    self.tagViewer.tagData = tagData;
+                    self.tagViewer.tagData.pageCount = Math.ceil(tagData.postPager.count / self.tagViewer.perPage);
+                    
+                    onready(self.tagViewer.tagData.pageCount);                    
+            }
+            
+            self.tagViewerRequestController.request("tagData1:tag(name : \\\"" + self.tagViewer.tagName + "\\\") {" + self.getTpl('query-tag', {QUERY_POST : self.getTpl('query-post'), OFFSET : 0, TYPE : self.tagViewer.type}).replace(/(?:\r\n|\r|\n)/g, '') + "}"); 
+            self.tagViewerRequestController = false;
+       },
+        
+        updatePostsDisplay : function() {
+            
+            var self = KellyProfileJoyreactorUnlock;
+            self.me.hiddenPosts = 0;
+            
+            var posts = self.handler.getPosts();
+            for (var i = 0; i < posts.length; i++) {
+                
+                posts[i].style.display = '';
+                if (!self.options.unlock.tvHideMe) continue;
+                
+                var userName = posts[i].getElementsByClassName('offline_username')[0];
+                if (userName && self.me.searchTag(KellyTools.getElementText(userName), self.me.meData.blockedUsers, 'username') != -1) {
+                    posts[i].style.display = 'none';
+                    self.me.hiddenPosts++;
+                    continue;
+                }
+                
+                var tags = self.handler.getPostTags(posts[i]);
+                
+                for (var b = 0; b < tags.length; b++) {
+                    
+                    var tagName = '||' + tags[b].trim().toLowerCase() + '||';
+                    
+                    if (self.me.meData.blockedTagsInline.indexOf(tagName) != -1) {
+                        posts[i].style.display = 'none';
+                        console.log(posts[i]);
+                        self.me.hiddenPosts++;
+                        break;
+                    }
+                }
+            }
+            
+            var counterBlock = document.getElementsByClassName(self.handler.className + '-tagviewer-hidestat')[0];
+            if (counterBlock) {
+                counterBlock.innerText = self.me.hiddenPosts;
+            }
+        
+        },
+        
+        updateHidePostsActionState : function(el, e){
+            
+            var self = KellyProfileJoyreactorUnlock;
+            
+            if (el) { 
+                self.options.unlock.tvHideMe = el.getAttribute('data-action') == 'show' ? false : true;
+                self.handler.fav.save('cfg');
+            }
+            
+             var hactions = document.getElementsByClassName(self.handler.className + '-tagviewer-haction');
+             for (var i = 0; i < hactions.length; i++) {
+                  
+                  var block = KellyTools.getParentByTag(hactions[i], 'p');
+                  if (block) {                  
+                      block.style.display = '';
+                      if (self.options.unlock.tvHideMe && hactions[i].getAttribute('data-action') == 'hide') block.style.display = 'none';
+                      if (!self.options.unlock.tvHideMe && hactions[i].getAttribute('data-action') == 'show') block.style.display = 'none';
+                  }
+             }
+            
+            return false;
+        },
+
+        updateTagSubscribeActionState : function(useCache) {
+            
+            var self = KellyProfileJoyreactorUnlock;
+                self.tagViewer.tagMeState = {
+                    followed : false, 
+                    blocked : false,
+                }
+                          
+            var onMeDataReady = function() {
+                 
+                var tagInfoBlock = document.getElementsByClassName(self.handler.className + '-tagviewer-tagStats')[0];      
+                if (tagInfoBlock) {
+                    tagInfoBlock.classList.add(self.handler.className + '-tagviewer-tagStats-login-' + (self.me.meData.user.id != -1 ? 'active' : 'none'));   
+                }
+                
+                if (self.me.meData.user.id == -1) {
+                    KellyTools.log('user not logged in - skip', KellyTools.E_NOTICE);
+                    return;
+                }
+                
+                KellyTools.log('new usertag list data recieved ', KellyTools.E_NOTICE);
+                
+                for (var i = 0; i < self.me.meData.subscribedTags.length; i++) {
+                    if (self.me.meData.subscribedTags[i].id == self.tagViewer.tagData.id) {
+                        self.tagViewer.tagMeState.followed = true;
+                        break;
+                    }
+                }
+                
+                if (!self.tagViewer.tagMeState.followed) {
+                    for (var i = 0; i < self.me.meData.blockedTags.length; i++) {
+                        if (self.me.meData.blockedTags[i].id == self.tagViewer.tagData.id) {
+                            self.tagViewer.tagMeState.blocked = true;
+                            break;
+                        }
+                    }
+                }
+                
+                self.tagViewer.updatePostsDisplay();
+                self.tagViewer.updateHidePostsActionState();
+                                
+                var tactions = document.getElementsByClassName(self.handler.className + '-tagviewer-taction');      
+                for (var i = 0; i < tactions.length; i++) {
+                    
+                    tactions[i].parentElement.style.display = '';
+                    
+                    if (tactions[i].getAttribute('data-action') == 'SUBSCRIBED') {
+                        tactions[i].parentElement.style.display = self.tagViewer.tagMeState.followed ? 'none' : '';
+                    } else if (tactions[i].getAttribute('data-action') == 'UNSUBSCRIBED') {
+                        tactions[i].parentElement.style.display = self.tagViewer.tagMeState.followed && !self.tagViewer.tagMeState.blocked ? '' : 'none';
+                    } else if (tactions[i].getAttribute('data-action') == 'UNBLOCKED') {
+                        tactions[i].parentElement.style.display = self.tagViewer.tagMeState.blocked ? '' : 'none';
+                    } else if (tactions[i].getAttribute('data-action') == 'BLOCKED') {
+                        tactions[i].parentElement.style.display = self.tagViewer.tagMeState.blocked ? 'none' : '';
+                    }
+                }
+            }
+            
+            self.showCNotice(false);
+            if (useCache && self.me.loaded) {
+                onMeDataReady();
+            } else {
+                self.updateMe(onMeDataReady);
+            }
+        },
+        
+        getCurrentUrl : function() {
+            
+            // tagData.postPager.count + '</b> Страниц : <b>' + self.tagViewer.tagData.pageCount 
+            
+            var self = KellyProfileJoyreactorUnlock;
+            if (!self.tagViewer.tagName || !self.tagViewer.tagData) return false;
+            
+            var url = window.location.origin + '/tag/' + self.tagViewer.tagName;
+            
+            if (self.tagViewer.type != 'GOOD') {
+                url += '/' + self.tagViewer.type.toLowerCase();
+            }
+            
+            if (self.tagViewer.page >= 2) { 
+                url += '/' + self.tagViewer.getJRPage();
+            }
+            
+            return url;
+        },
         
         afterPageLoad : function(unlockedData, postList, topMenuNotice) {
             
@@ -66,6 +284,12 @@ var KellyProfileJoyreactorUnlock = {
             
             if (unlockedData) setTimeout(function() { window.scrollTo(0, postList.getBoundingClientRect().top + KellyTools.getScrollTop() - 90); }, 200);  
             self.tagViewerRequestController = false;
+            
+            if (self.handler.hostClass != 'options_page') {
+                window.history.pushState({}, 'Данные из тега ' + self.tagViewer.tagName, self.tagViewer.getCurrentUrl());
+            }
+            
+            
     }},
     
     getNodeId : function(data) { 
@@ -153,6 +377,8 @@ var KellyProfileJoyreactorUnlock = {
     },
     
     getVoteForm(form, id, publicationDate, rating, hideSymbol, meAuthor) {
+        
+        // todo - ddeprecated - new api available
         
         var readOnly = !this.authData.token || !this.authData.time || meAuthor || this.authData.time - publicationDate > this.ratingMaxVoteHours * 60 * 60 * 1000 ? true : false;
       
@@ -290,13 +516,23 @@ var KellyProfileJoyreactorUnlock = {
                          
                 unlockController.attempts++;
                 
-                unlockController.log('Unlock post request ' + ' Attempt : ' + unlockController.attempts + '/' + unlockController.cfg.maxAttempts, 'unlockRequest');
-                unlockController.fetch = KellyTools.fetchRequest('https://api.joyreactor.cc/graphql?unlocker=1', {
+                var requestCfg = {
                     method : 'POST', 
                     headers : {'Content-Type': 'application/json'},
-                    body: self.getTpl('query', { QUERY : query }),
+                    body: typeof query == 'object' ? JSON.stringify(query) : self.getTpl('query', { QUERY : query }),
                     responseType : 'json',
-                }, function(url, responseData, responseStatusCode, error, fetchRequest) {
+                }
+                 
+                var requestUrl = 'https://api.joyreactor.cc/graphql';
+                
+                if (unlockController.cfg.credentials) {
+                    requestCfg.credentials = 'include';
+                } else {
+                    requestUrl += '?unlocker=1'; // Access * + api. subdomain as origin 
+                }
+                
+                unlockController.log('Unlock post request ' + ' Attempt : ' + unlockController.attempts + '/' + unlockController.cfg.maxAttempts, 'unlockRequest');
+                unlockController.fetch = KellyTools.fetchRequest(requestUrl, requestCfg, function(url, responseData, responseStatusCode, error, fetchRequest) {
                                
                     if (error || !responseData || !responseData.data) {
                         
@@ -696,10 +932,7 @@ var KellyProfileJoyreactorUnlock = {
             console.log('incompatible cache. reset');
             this.cacheReset();
         }
-        
-        
-            console.log(this.options.unlock.cacheData);
-            
+                
         this.unlockPool.tpl = 'query-post';
         var censoredData = this.getCensored();
         if (censoredData.length > 0) this.initWorkspace(function() {
@@ -707,6 +940,44 @@ var KellyProfileJoyreactorUnlock = {
         });
         
         
+    },
+    
+    updateMe : function(onReady) {
+        
+        var self = KellyProfileJoyreactorUnlock;
+        if (self.me.requestController) return false;
+        
+        var meQuery = self.getTpl('query-me', {});
+        query = "meData1:me {" + meQuery.replace(/(?:\r\n|\r|\n)/g, '') + "}";
+        
+        self.me.requestController = self.getUnlockController(); 
+        self.me.requestController.cfg = {credentials : true, maxAttempts : 2, reattemptTime : 1.4, }; 
+        self.me.requestController.callback = function(unlockedData) {
+            
+            if (!unlockedData.data || !unlockedData.data.meData1 || !unlockedData.data.meData1.user || !unlockedData.data.meData1.user.id) {
+                
+                console.log('fail to get me data');
+                
+                onReady(false);
+                return;
+            }
+            
+            self.me.loaded = true;
+            self.me.requestController = false;
+            self.me.meData = unlockedData.data.meData1;
+            self.me.meData.blockedTagsInline = '';
+            for (var i = 0; i < self.me.meData.blockedTags.length; i++) {
+                var tagName = self.me.meData.blockedTags[i].name.trim().toLowerCase().normalize();
+                self.me.meData.blockedTagsInline += '||' + tagName;
+            } 
+            
+            if (self.me.meData.blockedTagsInline.length > 0) self.me.meData.blockedTagsInline += '||';
+            
+            onReady(self.me.meData);
+        }
+        
+        self.me.requestController.request(query);
+            
     },
     
     loadTag : function(tagName, newPage, onload){
@@ -724,7 +995,7 @@ var KellyProfileJoyreactorUnlock = {
         
         if (!newPage) self.tagViewer.page = 1;
               
-        if (newPage == 'next') self.tagViewer.page++;
+             if (newPage == 'next') self.tagViewer.page++;
         else if (newPage == 'previuse' || newPage == 'prev' ) self.tagViewer.page--;
         else {
             self.tagViewer.page = parseInt(newPage);
@@ -743,15 +1014,16 @@ var KellyProfileJoyreactorUnlock = {
         var addPagination = function(elCl) {
             
                 KellyTools.showPagination({ 
+                    reversNames : true,
                     container : KellyTools.getElementByClass(document, elCl), 
                     curPage : self.tagViewer.page, 
                     onGoTo : function(newPage) {
                         self.loadTag(tagName, newPage, self.tagViewer.afterPageLoad);
-                        self.showCNotice('Тег [<b>' + self.tagViewer.tagName + '</b>] Загружаю страницу <b>' + self.tagViewer.page + '</b>');
+                        self.showCNotice('Тег [<b>' + self.tagViewer.tagName + '</b>] Загружаю страницу <b>' + self.tagViewer.getJRPage() + '</b>');
                         return false;
                     }, 
                     classPrefix : self.handler.className + '-pagination',
-                    pageItemsNum : 10,
+                    pageItemsNum : 6,
                     itemsNum : self.tagViewer.tagData.postPager.count,
                     perPage : self.tagViewer.perPage,
                 });
@@ -793,7 +1065,8 @@ var KellyProfileJoyreactorUnlock = {
                     }
                     
                 }
-             
+                
+                 var checkUserActions = self.handler.hostClass != 'options_page';
                  var postList = document.createElement('DIV');
                      postList.id = 'post_list';
                      
@@ -803,19 +1076,24 @@ var KellyProfileJoyreactorUnlock = {
                  postList.classList.add(self.handler.hostClass);
                  postList.classList.add(self.handler.className + '-tagViewerPostList');
                  
-                 var tagStatsHtml = '<div class="' + self.handler.className + '-tagviewer-tagStats">\
-                                    <h2>' + tagName + '</h2>\
-                                    <p><span><b>Тег отображается без дополнительной фильтрации NSFW и исключений</b></p>\
-                                    <p><span>Всего постов : <b>' + tagData.postPager.count + '</b> Страниц : <b>' + self.tagViewer.tagData.pageCount + '</b></p>\
-                                    <p class="' + self.handler.className + '-tagviewer-pagerTypes">\
-                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'BEST' ? 'selected' : '') + '" href="#" data-type="BEST">Лучшее</a>\
-                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'GOOD' ? 'selected' : '') + '" href="#" data-type="GOOD">Хорошее</a>\
-                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'NEW' ? 'selected' : '') + '" href="#" data-type="NEW">Новое</a>\
-                                        <a class="' + self.handler.className + '-tagviewer-pagerType ' + (self.tagViewer.type == 'ALL' ? 'selected' : '') + '" href="#" data-type="ALL">Бездна</a>\
-                                     </p>\
-                                </div>';
-                           
-
+                 if (tagData.mainTag) {
+                     tagData.subscribers = tagData.mainTag.subscribers;
+                     tagData.rating = tagData.mainTag.rating;
+                     tagData.synonyms = tagData.mainTag.synonyms;
+                 }
+                 
+                 var tagStatsHtml = self.getTpl('tag', {
+                            TAGNAME : tagName,
+                            HACTIONS : checkUserActions,
+                            SYNONIMSB : tagData.synonyms ? true : false, 
+                            SYNONIMS : tagData.synonyms,
+                            POSTSN : tagData.postPager.count,
+                            RATING : tagData.rating,
+                            PAGESN : self.tagViewer.tagData.pageCount,
+                            SUBSN : tagData.subscribers,
+                            CLASSNAME : self.handler.className,
+                        });
+                 
                  if (tagData.postPager.posts.length == 0) {
                           
                      KellyTools.setHTMLData(postList, tagStatsHtml + '<p>Публикаций в категории <b>' + self.tagViewer.typeNames[self.tagViewer.type] + '</b> нет</p>');
@@ -845,7 +1123,8 @@ var KellyProfileJoyreactorUnlock = {
                         });
                     }
                                  
-                     pageHtml = '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-top"></div>' + pageHtml + '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-bottom"></div>';
+                     pageHtml = '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-top">\
+                                 </div>' + pageHtml + '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-bottom"></div>';
                                                 
                      KellyTools.setHTMLData(postList, tagStatsHtml + pageHtml);
                            
@@ -865,21 +1144,92 @@ var KellyProfileJoyreactorUnlock = {
                      }
                      
                     addPagination(self.handler.className + '-tagviewer-pagination-top');
-                    addPagination(self.handler.className + '-tagviewer-pagination-bottom');
-               
+                    addPagination(self.handler.className + '-tagviewer-pagination-bottom');               
                  }
-      
-                 var types = document.getElementsByClassName(self.handler.className + '-tagviewer-pagerType');
-                 for (var i = 0; i < types.length; i++) {
-                    types[i].onclick = function() {
-                        self.tagViewer.type = this.getAttribute('data-type');
-                        self.showCNotice('Открываю тег ' + self.tagViewer.tagName + ' (' + self.tagViewer.typeNames[self.tagViewer.type] + ')...');
-                        self.loadTag(self.tagViewer.tagName, 1, self.tagViewer.afterPageLoad);
-                        return false;
+                  
+                 if (checkUserActions) {
+                     
+                    self.tagViewer.updateTagSubscribeActionState(true);
+                    var tactions = document.getElementsByClassName(self.handler.className + '-tagviewer-taction'); 
+                    
+                    for (var i = 0; i < tactions.length; i++) {
+                        tactions[i].onclick = function(e) {
+                            
+                            if (self.me.requestController) {
+                                self.showCNotice('Действие уже выполняется...');
+                                return false;
+                            }
+                            
+                            var requestCtrl = self.getUnlockController(); 
+                                requestCtrl.cfg = {credentials : true, maxAttempts : 2, reattemptTime : 1.4}; 
+                                requestCtrl.request({
+                                    query : "mutation FavoriteTagMutation($id: ID! $requestedState: FavoriteTagState!) {favoriteTag(id: $id, requestedState: $requestedState) {  __typename }}",
+                                    variables : {id : self.tagViewer.tagData.id, requestedState : this.getAttribute('data-action') == 'UNBLOCKED' ? 'UNSUBSCRIBED' : this.getAttribute('data-action')},
+                                }); 
+                                
+                                requestCtrl.callback = function() {
+                                    
+                                    self.me.requestController = false;
+                                    setTimeout(self.tagViewer.updateTagSubscribeActionState, 300);
+                                }
+                                
+                            self.me.requestController = requestCtrl;
+                            e.preventDefault();
+                            return false;
+                        }
                     }
+                    
+                     var hactions = document.getElementsByClassName(self.handler.className + '-tagviewer-haction');
+                     for (var i = 0; i < hactions.length; i++) {
+                          hactions[i].onclick = function(e) {self.tagViewer.updateHidePostsActionState(this, e);  self.tagViewer.updatePostsDisplay(); return false;}
+                     }
+                 }
+                
+                
+                 var menuItems = self.handler.getMainContainers().menu.querySelectorAll('.submenuitem');
+                 for (var i = 0; i < menuItems.length; i++) {
+                    
+                           if (menuItems[i].classList.contains(self.handler.className + '-tagviewer-pagerType')) {} 
+                      else if (menuItems[i].classList.contains(self.handler.hostClass) || menuItems[i].classList.contains('ignore')) {                        
+                        continue;
+                    }
+                    
+                    menuItems[i].parentElement.removeChild(menuItems[i]);
                  }
                  
-                self.renderCopyright(postList);
+                var firstChild = self.handler.getMainContainers().menu.getElementsByClassName(self.handler.className + '-MainMenuItem')[0];
+                var menuCaption = self.handler.getMainContainers().menu.querySelector('.tagname');
+                if (!menuCaption) {
+                    menuCaption = document.createElement('DIV');
+                    menuCaption.className = 'tagname';
+                }
+                
+                menuCaption.innerText = self.tagViewer.tagName + ' »';
+                
+                for (var typeKey in self.tagViewer.typeNames) {
+                    
+                    var typeAction = self.handler.fav.addMenuButton(self.tagViewer.typeNames[typeKey], function(){
+                        
+                        self.tagViewer.type = KellyTools.getParentByClass(this, self.handler.className + '-tagviewer-pagerType').getAttribute('data-type');
+                        self.showCNotice('Открываю тег ' + self.tagViewer.tagName + ' (' + self.tagViewer.typeNames[self.tagViewer.type] + ')...');
+                        self.loadTag(self.tagViewer.tagName, 1, self.tagViewer.afterPageLoad);
+                        
+                    }, 'typeAction-' +  typeKey);
+                        
+                        firstChild.parentElement.insertBefore(typeAction, firstChild);
+                
+                        if (self.tagViewer.type == typeKey) {
+                            typeAction.classList.add('active');
+                        }
+                        
+                        typeAction.setAttribute('data-type', typeKey);
+                        typeAction.classList.add(self.handler.className + '-tagviewer-pagerType');
+                        if (typeKey == 'ALL' && self.handler.hostClass != 'options_page') {
+                            typeAction.style.float = 'right';
+                        }
+                }
+                
+                // self.renderCopyright(postList);
                 onload(unlockedData, postList);
             };
             
@@ -897,20 +1247,23 @@ var KellyProfileJoyreactorUnlock = {
             }
             
             if (!self.tagViewerTooltip) {
-            self.tagViewerTooltip = new KellyTooltip({
-                target : target ? target : self.tagViewerMenuButton, 
-                offset : {left : 0, top : 15}, 
-                positionY : 'bottom',
-                positionX : 'left',
-                ptypeX : 'inside',                
-                ptypeY : 'outside',
-                closeByBody : true,
-                closeButton : false,
-                removeOnClose : false,                    
-                selfClass : self.handler.hostClass + ' ' + self.handler.className + '-tooltipster-tagviewer',
-                classGroup : self.handler.className + '-tooltipster',
-            });
+                
+                self.tagViewerTooltip = new KellyTooltip({
+                    target : target ? target : self.tagViewerMenuButton, 
+                    offset : {left : 0, top : 15}, 
+                    positionY : 'bottom',
+                    positionX : 'left',
+                    ptypeX : 'inside',                
+                    ptypeY : 'outside',
+                    closeByBody : true,
+                    closeButton : false,
+                    removeOnClose : false,                    
+                    selfClass : self.handler.hostClass + ' ' + self.handler.className + '-tooltipster-tagviewer',
+                    classGroup : self.handler.className + '-tooltipster',
+                });
+                
             } else {
+                
                 self.tagViewerTooltip.updateCfg({target : target ? target : self.tagViewerMenuButton});
             }
             
@@ -971,11 +1324,40 @@ var KellyProfileJoyreactorUnlock = {
                 
                 self.tagViewer.type = formData.type;
                 
-                self.loadTag(formData.tagName, formData.page, function(unlockedData, postList) {
+                if (formData.page > 1) {
                     
-                    self.tagViewer.afterPageLoad(unlockedData, postList, notice);
+                    self.tagViewer.tagName = formData.tagName;
+                    self.tagViewer.getTagTotalPages(function(total) {
+                        
+                            if (total === false || total <= 0) {
+                                total = 1;
+                            }
+                            
+                            if (formData.page >= total) {
+                                formData.page = total;
+                            }
+                            
+                            setTimeout(function() {
+                                
+                                self.loadTag(formData.tagName, total - formData.page + 1, function(unlockedData, postList) {
+                                    
+                                    self.tagViewer.afterPageLoad(unlockedData, postList, notice);
+                                    
+                                });
+                                
+                            }, 400);
+                    });
                     
-                });
+                } else {
+                    
+                    self.loadTag(formData.tagName, formData.page, function(unlockedData, postList) {
+                        
+                        self.tagViewer.afterPageLoad(unlockedData, postList, notice);
+                        
+                    });
+                    
+                }        
+                
                 
                 return false;
             }
@@ -1037,6 +1419,87 @@ var KellyProfileJoyreactorUnlock = {
             self.tagViewerMenuButton = self.handler.fav.addMenuButton('[#]', function(){}, 'TagViewer');
         }
         
+        var request = new URLSearchParams(window.location.search);
+        if (request.get('kellyrequest') == 'censored') {
+            
+           KellyTools.getBrowser().runtime.sendMessage({method: "getCensoredTabUrl"}, function(response) {
+                
+                if (response.url) {
+                    
+                    var urlParts = response.url.split('?')[0].split('/tag')[1];
+                        urlParts = urlParts.split('/');
+                    
+                    var tagData = {
+                         name : urlParts[1],
+                         type : 'GOOD',
+                         page : 1,
+                    };
+                    
+                    var fitUnknown = function(part, tagData) {
+                        
+                        if (!part) return;
+                        
+                        if (part && ['ALL', 'NEW', 'BEST', 'GOOD'].indexOf(part.toUpperCase()) != -1) {
+                            tagData.type = part.toUpperCase();
+                        } else {
+                            part = parseInt(part);
+                            if (Number.isInteger(part) && part >= 1) {
+                                tagData.page = part;
+                            }
+                        }
+                    }
+                                        
+                    if (urlParts.length >= 3) fitUnknown(urlParts[2], tagData);
+                    if (urlParts.length >= 4) fitUnknown(urlParts[3], tagData);
+                    
+                    if (tagData.name) {
+                        tagData.name = decodeURIComponent(tagData.name).replace(/[ +]/gim, ' ');
+                    }
+                    
+                    console.log(tagData);
+                    
+                    self.initWorkspace(function() { 
+                        
+                        self.tagViewer.type = tagData.type;
+                        
+                        if (tagData.page > 1) {
+                            
+                            self.tagViewer.tagName = tagData.name;
+                            self.tagViewer.getTagTotalPages(function(total) {
+                                
+                                    if (total === false || total <= 0) {
+                                        total = 1;
+                                    }
+                                    
+                                    if (tagData.page >= total) {
+                                        tagData.page = total;
+                                    }
+                                    
+                                    setTimeout(function() {
+                                        
+                                        self.loadTag(tagData.name, total - tagData.page + 1, function(unlockedData, postList) {                        
+                                            self.tagViewer.afterPageLoad(unlockedData, postList);                        
+                                        });
+                                        
+                                    }, 400);
+                            });
+                            
+                        } else {
+                            
+                             self.loadTag(tagData.name, 1, function(unlockedData, postList) {                        
+                                self.tagViewer.afterPageLoad(unlockedData, postList);                        
+                            });
+                            
+                        }
+                    });
+                    
+                    self.showCNotice('Открываю тег [<b>' + tagData.name + '</b>]');
+                    window.history.pushState({}, 'Данные из тега ' + tagData.name, response.url);
+                
+                }
+            });
+            
+        }
         
         self.tagViewerMenuButton.onclick = function() {
             self.showTagViewerTooltip();
@@ -1139,6 +1602,7 @@ var KellyProfileJoyreactorUnlock = {
             if (typeof data.coptions.unlock.lastTv == 'undefined') data.coptions.unlock.lastTv = 'Этти';
             if (typeof data.coptions.unlock.tvAny == 'undefined') data.coptions.unlock.tvAny = false;
             if (typeof data.coptions.unlock.mreact == 'undefined') data.coptions.unlock.mreact = true;
+            if (typeof data.coptions.unlock.tvHideMe == 'undefined') data.coptions.unlock.tvHideMe = false;
             
             KellyProfileJoyreactorUnlock.options = data.coptions;
         }

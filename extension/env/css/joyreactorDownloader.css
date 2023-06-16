@@ -21,6 +21,17 @@
     cursor: pointer;
 }
 
+.__BASECLASS__-tagviewer-tagStats #blogFavroiteLinks,
+.__BASECLASS__-tagviewer-tagStats .__BASECLASS__-tagviewer-haction {
+    display : none;
+}
+
+.__BASECLASS__-tagviewer-tagStats.__BASECLASS__-tagviewer-tagStats-login-active #blogFavroiteLinks,
+.__BASECLASS__-tagviewer-tagStats.__BASECLASS__-tagviewer-tagStats-login-active .__BASECLASS__-tagviewer-haction  {
+    display : block;
+}
+
+
 .jr-downloader .__BASECLASS__-tooltipster-content select.__BASECLASS__TagType{
     margin-bottom : 5px;
     background: #d8d8d8;

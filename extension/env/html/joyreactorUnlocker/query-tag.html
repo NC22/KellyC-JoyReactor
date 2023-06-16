@@ -1,6 +1,31 @@
 ... on Tag {
-
-    name, seoName, unsafe, nsfw, postPager(type:__TYPE__, favoriteType:null) {
+    id,
+    name, 
+    seoName, 
+    unsafe, 
+    nsfw, 
+    subscribers,
+    articlePost {
+        text,
+        attributes {
+            ... on AttributeEmbed {id, type, value, image { type }} 
+            ... on AttributePicture {id, type, image { type, width, height }}
+        }
+    },
+    mainTag { 
+        id,
+        count,
+        name,
+        seoName,
+        synonyms,
+        rating,
+        subscribers,
+        image { id }
+    },
+    image {
+        width, height, id
+    },
+    postPager(type:__TYPE__, favoriteType:null) {
 
         id, count, posts(offset: __OFFSET__) {
         
