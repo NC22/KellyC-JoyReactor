@@ -9,6 +9,9 @@ var KellyEDispetcherJRBG = new Object;
         "fapreactor.com",
     ];
     
+    // todo - check enabled - turnoff option
+    // KellyTools.DEBUG = true;
+    
     KellyEDispetcherJRBG.cfgName = 'kelly_cache_jr_unlocker';
     
     
@@ -173,14 +176,14 @@ var KellyEDispetcherJRBG = new Object;
                         return;
                     }
                     
-                    var idCounter = 11; // start id counter - used for revision check
+                    var idCounter = 10; // start id counter - used for revision check
                                         
                     KellyTools.log('[Reactor] SESSIONS ');
                     
-                    if (rulesSetted.length > 0 && rulesSetted[0].id == idCounter) {
-                       KellyTools.log('[Reactor] SESSIONS RULES Already setted ');                    
-                       return;
-                    }
+                    // if (rulesSetted.length > 0 && rulesSetted[0].id == idCounter) {
+                    //   KellyTools.log('[Reactor] SESSIONS RULES Already setted ');                    
+                    //   return;
+                    // }
                     
                     var oldRulesIds = [];
                     
@@ -201,7 +204,7 @@ var KellyEDispetcherJRBG = new Object;
                                         "fragment": "",
                                         "queryTransform" : {
                                             "addOrReplaceParams" : [
-                                                {"key" : "kellyrequest", "value" : "censored"}
+                                                {"key" : "kellyrequest", "value" : "censored"},
                                             ],
                                         }
                                     }
@@ -220,8 +223,8 @@ var KellyEDispetcherJRBG = new Object;
                     }
                         
                     for (var i = 0; i < KellyEDispetcherJRBG.hostList.length; i++) {
-                        addCRule('*://' + KellyEDispetcherJRBG.hostList[i] + '*/images/censorship/*');
-                        addCRule('*://*.' + KellyEDispetcherJRBG.hostList[i] + '*/images/censorship/*');
+                        addCRule('*://' + KellyEDispetcherJRBG.hostList[i] + '*images/censorship/*');
+                        addCRule('*://*.' + KellyEDispetcherJRBG.hostList[i] + '*images/censorship/*');
                     }
                     
                     KellyTools.getBrowser().declarativeNetRequest.updateDynamicRules({addRules : rules, removeRuleIds : oldRulesIds}, function() {
