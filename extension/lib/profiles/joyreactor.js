@@ -745,11 +745,13 @@ function KellyProfileJoyreactor() {
         var imgServer = url.match(/img(\d+)/);
         if (imgServer &&  imgServer.length) {
             
-            if (url.indexOf('static') !== -1 || url.indexOf('.gif') == -1) return url;
+            if (url.indexOf('.gif') == -1 && url.indexOf('.webm') == -1) return url;
+            if (url.indexOf('static') !== -1) return url;
             
             url = url.replace('pics/comment/', 'pics/comment/static/');
             url = url.replace('post/', 'post/static/');
             url = url.replace('.gif', '.jpeg');
+            url = url.replace('.webm', '.jpeg');
         }
         
         return url;

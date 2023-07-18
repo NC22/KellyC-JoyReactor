@@ -11,7 +11,14 @@
         name, seoName, id
     },
     comments { 
-        level, parent {id}, createdAt, rating, user {id, username}, id, text, 
+        level, 
+        parent {id}, 
+        createdAt, 
+        vote {createdAt},
+        rating, 
+        user {id, username},
+        id, 
+        text, 
         attributes {
             ... on AttributeEmbed {id, type, value, image { type }} 
             ... on AttributePicture {id, type, image { type }}

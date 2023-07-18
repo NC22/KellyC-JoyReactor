@@ -10,7 +10,7 @@ var KellyEDispetcherJRBG = new Object;
     ];
     
     // todo - check enabled - turnoff option
-    // KellyTools.DEBUG = true;
+    KellyTools.DEBUG = false;
     
     KellyEDispetcherJRBG.cfgName = 'kelly_cache_jr_unlocker';
     
@@ -132,7 +132,7 @@ var KellyEDispetcherJRBG = new Object;
                    if (e.statusCode >= 300 && e.statusCode <= 310) { 
                    
                         KellyTools.log('[Reactor] redirect for ' + e.url);
-
+                        
                         var eventLocation = KellyTools.getLocationFromUrl(e.url);
                         var domain = '';
                         
@@ -192,8 +192,16 @@ var KellyEDispetcherJRBG = new Object;
                     }
                     
                     var rules = [], ids = [];                    
-                    var addCRule = function(match) {
+                    var addCRule = function(match, compatibility) {
                         
+                        var keys = [
+                            {"key" : "kellyrequest", "value" : "censored"},
+                        ];
+                        
+                        if (compatibility == 'visitor') {
+                            keys.push({"key" : "kellycompatibility", "value" : "visitor"});
+                        }
+                                            
                         rules.push({
                             "id" : idCounter,
                             "action": {
@@ -203,9 +211,7 @@ var KellyEDispetcherJRBG = new Object;
                                         "path": "",
                                         "fragment": "",
                                         "queryTransform" : {
-                                            "addOrReplaceParams" : [
-                                                {"key" : "kellyrequest", "value" : "censored"},
-                                            ],
+                                            "addOrReplaceParams" : keys,
                                         }
                                     }
                                 }
@@ -214,7 +220,7 @@ var KellyEDispetcherJRBG = new Object;
                                 "urlFilter" : match,
                                 "resourceTypes" : ['main_frame', 'other']
                             },
-                            "priority": 1,
+                            "priority": 2,
                         });
                         
                         ids.push(idCounter);
@@ -223,6 +229,12 @@ var KellyEDispetcherJRBG = new Object;
                     }
                         
                     for (var i = 0; i < KellyEDispetcherJRBG.hostList.length; i++) {
+                        
+                        // visitor по умолчанию ломает элементы интерфейса KellyC выведеные в шапке страницы - используем для просмотра тегов всегда KellyC чтобы Visitor не ломал функционал
+                        // KellyC rules can be disabled in options other section
+                        
+                        addCRule('*://' + KellyEDispetcherJRBG.hostList[i] + '*#JV=tag*', 'visitor');
+                        addCRule('*://*.' + KellyEDispetcherJRBG.hostList[i] + '*#JV=tag*', 'visitor');
                         addCRule('*://' + KellyEDispetcherJRBG.hostList[i] + '*images/censorship/*');
                         addCRule('*://*.' + KellyEDispetcherJRBG.hostList[i] + '*images/censorship/*');
                     }
@@ -241,4 +253,46 @@ var KellyEDispetcherJRBG = new Object;
             }
     }
     
-    KellyEDispetcherJRBG.initRules();
+    KellyEDispetcherJRBG.initRulesWithCheckCfg = function() {
+            
+            var cfgName = 'kelly_cfg_joyreactor_config';
+            KellyEDispetcher.api.storage.local.get(cfgName, function(item) {
+                
+                KellyEDispetcherJRBG.enabled = item && item[cfgName] && item[cfgName]['coptions'] && typeof item[cfgName]['coptions'].unlock.tvRouting != 'undefined' ? item[cfgName]['coptions'].unlock.tvRouting : true;
+        
+                if (KellyEDispetcherJRBG.enabled) {
+                    KellyEDispetcherJRBG.initRules();
+                } else {
+                    
+                    KellyTools.getBrowser().declarativeNetRequest.getDynamicRules(function(rulesSetted) {
+                
+                        if (KellyTools.getBrowser().runtime.lastError) {                
+                            KellyTools.log('Error : ' + KellyTools.getBrowser().runtime.lastError.message, 'KellyEDispetcher | declarativeNetRequest'); 
+                            return;
+                        }
+                        
+                        var oldRulesIds = [];                        
+                        for (var i = 0; i < rulesSetted.length; i++) {
+                            oldRulesIds.push(rulesSetted[i].id);
+                        }
+                        
+                        KellyTools.getBrowser().declarativeNetRequest.updateDynamicRules({addRules : [], removeRuleIds : oldRulesIds}, function() {
+
+                            if (KellyTools.getBrowser().runtime.lastError) {                
+                                KellyTools.log('Error : ' + KellyTools.getBrowser().runtime.lastError.message, 'KellyEDispetcher | declarativeNetRequest');         
+                            } else {
+                                   
+                                KellyTools.log('[Reactor][REMOVE] session Rules', 'KellyEDispetcher | declarativeNetRequest');
+                            }                        
+                        });  
+                        
+                    });
+                    
+                    KellyTools.log('[Reactor] Tag router disabled', 'KellyEDispetcher | declarativeNetRequest');
+                }
+                
+            });
+        
+    }
+
+    KellyEDispetcherJRBG.initRulesWithCheckCfg();

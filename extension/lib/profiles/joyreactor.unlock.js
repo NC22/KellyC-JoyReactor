@@ -3,18 +3,72 @@ var KellyProfileJoyreactorUnlock = {
     // this.handler = env profile object
     
     postMaxHeight : 2000, cacheLimit : 400, cacheDataVersion : 2, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 48, ratingMaxVoteHours : 48, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
-    tplItems : ['tag', 'att-image', 'att-youtube', 'att-coub', 'query', 'query-me', 'query-post', 'query-tag', 'query-post-with-comments', 'post', 'post-maket', 'post-locked', 'comment', 'comment-old', 'post-form-comment', 'post-form-vote', 'comment-form-vote'],    
+    tplItems : [
+        'tag', 
+        'att-video', 'att-image', 'att-youtube', 'att-coub', 'att-soundcloud',
+        'query', 'query-me', 'query-post', 'query-tag', 'query-post-with-comments', 'query-post-vote',
+        'post', 'post-maket', 'post-locked', 
+        'comment', 'comment-old', 
+        'post-form-comment', 'post-form-vote', 'comment-form-vote'
+    ],    
     authData : {token : false}, initEvents : [], 
     me : {
         loaded : false,
-        meData : {
-            blockedTags : [],
-            blockedUsers : [],
-            blockedTagsInline : '',
-            subscribedTags : [],
-            user : {id : -1},
-        },
-        searchTag : function(name, pool, key) {
+        getDefaultData : function() {
+            return {
+                default : true,
+                blockedTags : [],
+                blockedUsers : [],
+                blockedTagsInline : '',
+                subscribedTags : [],
+                user : {id : -1},
+            };
+        },        
+        updateMe : function(onReady) {
+            
+            var self = KellyProfileJoyreactorUnlock;
+            if (self.me.requestController) return false;
+            
+            var meQuery = self.getTpl('query-me', {});
+            query = "meData1:me {" + meQuery.replace(/(?:\r\n|\r|\n)/g, '') + "}";
+            
+            self.me.requestController = self.getUnlockController(); 
+            self.me.requestController.cfg = {credentials : true, maxAttempts : 2, reattemptTime : 1.4, }; 
+            self.me.requestController.callback = function(unlockedData) {
+                
+                if (!unlockedData.data || typeof unlockedData.data.meData1 != 'object') {
+                    
+                    console.log('fail to get me data');
+                    onReady(false);
+                    return;
+                }
+                
+                if (unlockedData.data.meData1 === null) {
+                    unlockedData.data.meData1 = self.me.getDefaultData();                
+                }
+                            
+                self.options.unlock.meData = unlockedData.data.meData1;
+                self.options.unlock.meData.default = false;                     
+                
+                self.me.requestController = false;
+                
+                self.options.unlock.meData.blockedTagsInline = '';            
+                for (var i = 0; i < self.options.unlock.meData.blockedTags.length; i++) {
+                    var tagName = self.options.unlock.meData.blockedTags[i].name.trim().toLowerCase().normalize();
+                    self.options.unlock.meData.blockedTagsInline += '||' + tagName;
+                } 
+                
+                if (self.options.unlock.meData.blockedTagsInline.length > 0) self.options.unlock.meData.blockedTagsInline += '||';
+                
+                self.handler.fav.save('cfg');
+                
+                onReady(self.options.unlock.meData);
+            }
+            
+            self.me.requestController.request(query);
+                
+        },        
+        searchPool : function(name, pool, key) {
             
             if (!key) key = 'name';
             
@@ -76,6 +130,72 @@ var KellyProfileJoyreactorUnlock = {
             return self.tagViewer.tagData ? self.tagViewer.tagData.pageCount - self.tagViewer.page + 1 : 1;
         }, 
         
+        getPostsUserData : function(ids) { 
+            
+            var self = KellyProfileJoyreactorUnlock;
+            if (!ids || ids.length <= 0) {
+                return;
+            }
+                        
+            if (self.options.unlock.meData.user.id == -1) { 
+                return;
+            }            
+            
+            var onUserDataReady = function(data) {
+            
+                    for (i = 0; i < ids.length; i++) {
+                        
+                        var postEl = document.getElementById('postContainer' + ids[i]);
+                        var postData = data && data['node' + (i+1)] ? data['node' + (i+1)] : false;
+                        if (!postEl) {
+                            console.log('skip unexist post - ' + postUserData.idEl);
+                            continue;
+                        }
+                        
+                        var postRatingBlock = postEl.getElementsByClassName('post_rating')[0];
+                        if (postRatingBlock) {                            
+                            var rating = postData && postData.vote ?  KellyTools.val(postRatingBlock.getAttribute('data-rating'), 'float').toFixed(1) : '--';                       
+                            KellyTools.setHTMLData(postRatingBlock, self.getTpl('post-form-vote', {VOTE : postData ? true : false, RATING : rating}));
+                        }
+                        
+                        var favoriteButton = postEl.getElementsByClassName('favorite_link')[0];
+                        if (favoriteButton) {
+                            
+                            if (postData) {
+                                favoriteButton.style.display = '';
+                            }
+                            
+                            if (postData && postData.favorite) {
+                                favoriteButton.classList.add('favorite');
+                            }
+                            
+                        }
+                        
+                    }    
+            }
+            
+            self.tagViewerRequestController = self.getUnlockController(); 
+            self.tagViewerRequestController.cfg = {credentials : true, maxAttempts : 2, reattemptTime : 1.4, }; 
+            self.tagViewerRequestController.callback = function(unlockedData) {
+                
+                    if (!unlockedData || !unlockedData.data) {    
+                    
+                        console.log('fail to get tag data');                    
+                        console.log(unlockedData);
+
+                        onUserDataReady(false);
+                        return false;
+                    }
+                    
+                    console.log(unlockedData);
+                                  
+                    onUserDataReady(unlockedData.data);            
+            }
+            
+            self.tagViewerRequestController.request(self.getQueryPost(ids, 'query-post-vote'));
+            self.tagViewerRequestController = false;
+       },
+       
         getTagTotalPages : function(onready) { // cant find direct way to set page number in query without calc offset, so used this method in cases when specifed page needed be accessed without any cache loaded
             
             var self = KellyProfileJoyreactorUnlock;
@@ -116,7 +236,7 @@ var KellyProfileJoyreactorUnlock = {
                 if (!self.options.unlock.tvHideMe) continue;
                 
                 var userName = posts[i].getElementsByClassName('offline_username')[0];
-                if (userName && self.me.searchTag(KellyTools.getElementText(userName), self.me.meData.blockedUsers, 'username') != -1) {
+                if (userName && self.me.searchPool(KellyTools.getElementText(userName), self.options.unlock.meData.blockedUsers, 'username') != -1) {
                     posts[i].style.display = 'none';
                     self.me.hiddenPosts++;
                     continue;
@@ -128,7 +248,7 @@ var KellyProfileJoyreactorUnlock = {
                     
                     var tagName = '||' + tags[b].trim().toLowerCase() + '||';
                     
-                    if (self.me.meData.blockedTagsInline.indexOf(tagName) != -1) {
+                    if (self.options.unlock.meData.blockedTagsInline.indexOf(tagName) != -1) {
                         posts[i].style.display = 'none';
                         console.log(posts[i]);
                         self.me.hiddenPosts++;
@@ -167,7 +287,7 @@ var KellyProfileJoyreactorUnlock = {
             return false;
         },
 
-        updateTagSubscribeActionState : function(useCache) {
+        updateTagSubscribeActionState : function(useCache, onready) {
             
             var self = KellyProfileJoyreactorUnlock;
                 self.tagViewer.tagMeState = {
@@ -179,26 +299,38 @@ var KellyProfileJoyreactorUnlock = {
                  
                 var tagInfoBlock = document.getElementsByClassName(self.handler.className + '-tagviewer-tagStats')[0];      
                 if (tagInfoBlock) {
-                    tagInfoBlock.classList.add(self.handler.className + '-tagviewer-tagStats-login-' + (self.me.meData.user.id != -1 ? 'active' : 'none'));   
+                    tagInfoBlock.classList.add(self.handler.className + '-tagviewer-tagStats-login-' + (self.options.unlock.meData.user.id != -1 ? 'active' : 'none'));   
+                    
+                    if (self.options.unlock.meData.user.id != -1 && self.tagViewer.postForm) {
+                        if (self.tagViewer.postForm['create_button']) {
+                            
+                            tagInfoBlock.appendChild(self.tagViewer.postForm['create_button']);
+                            tagInfoBlock.appendChild(self.tagViewer.postForm['add_post_holder']);
+                            
+                        }  else if (self.tagViewer.postForm['add_post']) {
+                            
+                            tagInfoBlock.appendChild(self.tagViewer.postForm['add_post']);
+                        }
+                    }
                 }
                 
-                if (self.me.meData.user.id == -1) {
+                if (self.options.unlock.meData.user.id == -1) {
                     KellyTools.log('user not logged in - skip', KellyTools.E_NOTICE);
                     return;
                 }
                 
                 KellyTools.log('new usertag list data recieved ', KellyTools.E_NOTICE);
                 
-                for (var i = 0; i < self.me.meData.subscribedTags.length; i++) {
-                    if (self.me.meData.subscribedTags[i].id == self.tagViewer.tagData.id) {
+                for (var i = 0; i < self.options.unlock.meData.subscribedTags.length; i++) {
+                    if (self.options.unlock.meData.subscribedTags[i].id == self.tagViewer.tagData.id) {
                         self.tagViewer.tagMeState.followed = true;
                         break;
                     }
                 }
                 
                 if (!self.tagViewer.tagMeState.followed) {
-                    for (var i = 0; i < self.me.meData.blockedTags.length; i++) {
-                        if (self.me.meData.blockedTags[i].id == self.tagViewer.tagData.id) {
+                    for (var i = 0; i < self.options.unlock.meData.blockedTags.length; i++) {
+                        if (self.options.unlock.meData.blockedTags[i].id == self.tagViewer.tagData.id) {
                             self.tagViewer.tagMeState.blocked = true;
                             break;
                         }
@@ -207,7 +339,8 @@ var KellyProfileJoyreactorUnlock = {
                 
                 self.tagViewer.updatePostsDisplay();
                 self.tagViewer.updateHidePostsActionState();
-                                
+                
+                
                 var tactions = document.getElementsByClassName(self.handler.className + '-tagviewer-taction');      
                 for (var i = 0; i < tactions.length; i++) {
                     
@@ -223,13 +356,15 @@ var KellyProfileJoyreactorUnlock = {
                         tactions[i].parentElement.style.display = self.tagViewer.tagMeState.blocked ? 'none' : '';
                     }
                 }
+                
+                if (onready) onready();
             }
             
             self.showCNotice(false);
-            if (useCache && self.me.loaded) {
+            if (useCache && !self.options.unlock.meData.default) {
                 onMeDataReady();
             } else {
-                self.updateMe(onMeDataReady);
+                self.me.updateMe(onMeDataReady);
             }
         },
         
@@ -336,16 +471,39 @@ var KellyProfileJoyreactorUnlock = {
         var itemN = 0, attributeHolders = htmlContext && htmlContext.indexOf('&attribute_insert_') != -1;
                 
         attributes.forEach(function(attributeData) {
-            var itemHtml = ''; itemN++;
-            if (attributeData.type != 'PICTURE') {
-                if (['YOUTUBE', 'COUB'].indexOf(attributeData.type) != -1)  itemHtml = self.getTpl('att-' + attributeData.type.toLowerCase(), { VALUE : attributeData.value});
-            } else {     
             
+            var itemHtml = ''; itemN++;
+          
+            if (attributeData.type == 'SOUNDCLOUD') {
+                var urlInfo = KellyTools.parseJSON(attributeData.value);
+                if (urlInfo) {
+                    itemHtml = self.getTpl('att-soundcloud', { VALUE : encodeURIComponent(urlInfo.url)});
+                }
+                
+            } else if (['YOUTUBE', 'COUB'].indexOf(attributeData.type) != -1) {
+                
+                itemHtml = self.getTpl('att-' + attributeData.type.toLowerCase(), { VALUE : attributeData.value});
+                
+            } else if (attributeData.type == 'PICTURE') {         
+            
+                var animationFormat = ['mp4', 'webm'].indexOf(attributeData.image.type.toLowerCase()) != -1;
+                
                 var src = "//img10.joyreactor.cc/pics/" + type + '/' + urlPrefix + self.getNodeId(attributeData.id) + '.' + attributeData.image.type.toLowerCase();                
                 if (self.handler.hostClass == 'options_page') src = 'https:' + src;
                 // if (!attributeData.image) attributeData.image = attributeData.image = {width : '', height : ''};
                 
-                itemHtml = self.getTpl('att-image', { POSTURL_PREVIEW : src, POSTURL_FULL : src.replace(type + '/', type + '/full/'), WIDTH : '' /*attributeData.image.width*/, HEIGHT : '' /*attributeData.image.height*/});
+                if (animationFormat) {
+                    
+                    itemHtml = self.getTpl('att-video', { 
+                        POSTURL_STATIC : self.handler.getStaticImage(src),
+                        POSTURL_WEBM : self.handler.getImageDownloadLink(src, false, 'webm'),
+                        POSTURL_MP4 : self.handler.getImageDownloadLink(src, false, 'mp4'),
+                    });
+                    
+                } else {
+                
+                    itemHtml = self.getTpl('att-image', { POSTURL_PREVIEW : src, POSTURL_FULL : src.replace(type + '/', type + '/full/'), WIDTH : '' /*attributeData.image.width*/, HEIGHT : '' /*attributeData.image.height*/});
+                }
             }
             
             if (attributeHolders) htmlContext = htmlContext.replace('&attribute_insert_' + itemN + '&', itemHtml);
@@ -598,7 +756,7 @@ var KellyProfileJoyreactorUnlock = {
                             PICS : self.getPublicationAttributesHtml(true, urlPrefix, comment), 
                             USER_NAME : comment.user.username, 
                             USER_ID : self.getNodeId(comment.user.id),
-                            POST_ID : postId,                        
+                            POST_ID : postId,
                             COMMENT_ID : self.getNodeId(comment.id),
                             DATE : self.getFormatedDate(datetime),
                             TIME : KellyTools.getTime(datetime),
@@ -821,6 +979,7 @@ var KellyProfileJoyreactorUnlock = {
         var self = this;        
         if (self.handler.hostClass == 'options_page') return;
         
+        var checkUserActions = self.handler.hostClass != 'options_page' && document.getElementById('settings');
         var getSubName = function(length) {
             
            var result           = '';
@@ -856,7 +1015,7 @@ var KellyProfileJoyreactorUnlock = {
             
             postBlock.getElementsByTagName('H2')[0].appendChild(holder);
             
-            var title = 'KellyC © nradiowave <' + self.copyrightBN + 'tk>Сказать спасибо</' +self.copyrightBN + 'tk>';
+            var title = 'KellyC Tag Viewer';
         
         } else {
             
@@ -882,11 +1041,15 @@ var KellyProfileJoyreactorUnlock = {
            self.copyrightCss = self.copyrightBN + 'pl {\
                     color: #100f0f;\
                     font-size: 12px;\
-                    padding: 4px;\
+                    padding: 6px;\
                     border-radius: 2px;\
-                    float : right;\
-                    padding-right : 0;\
-               }' + self.copyrightBN + ' {\
+                    float: right;\
+                    margin-right: ' + (checkUserActions ? '12px' : '-100px') + ';\
+                    padding-right: 0;\
+                    background: rgba(0, 0, 0, 0.02);\
+                    line-height: 12px;\
+               }\
+               ' + self.copyrightBN + ' {\
                     color: #100f0f;\
                     font-size: 12px;\
                     padding: 4px;\
@@ -911,9 +1074,9 @@ var KellyProfileJoyreactorUnlock = {
         }
         
         KellyTools.setHTMLData(holder, title);
-        holder.getElementsByTagName(self.copyrightBN + 'tk')[0].onclick = function() {
-            KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : 'https://nradiowave.ru/webdev'}, function(request) {}); // /''/env/html/' + self.handler.profile + 'Downloader.html?tab=donate
-        }
+        // holder.getElementsByTagName(self.copyrightBN + 'tk')[0].onclick = function() {
+        //    KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : 'https://nradiowave.ru/webdev'}, function(request) {}); // /''/env/html/' + self.handler.profile + 'Downloader.html?tab=donate
+        // }
         
     },
     
@@ -941,45 +1104,7 @@ var KellyProfileJoyreactorUnlock = {
         
         
     },
-    
-    updateMe : function(onReady) {
         
-        var self = KellyProfileJoyreactorUnlock;
-        if (self.me.requestController) return false;
-        
-        var meQuery = self.getTpl('query-me', {});
-        query = "meData1:me {" + meQuery.replace(/(?:\r\n|\r|\n)/g, '') + "}";
-        
-        self.me.requestController = self.getUnlockController(); 
-        self.me.requestController.cfg = {credentials : true, maxAttempts : 2, reattemptTime : 1.4, }; 
-        self.me.requestController.callback = function(unlockedData) {
-            
-            if (!unlockedData.data || !unlockedData.data.meData1 || !unlockedData.data.meData1.user || !unlockedData.data.meData1.user.id) {
-                
-                console.log('fail to get me data');
-                
-                onReady(false);
-                return;
-            }
-            
-            self.me.loaded = true;
-            self.me.requestController = false;
-            self.me.meData = unlockedData.data.meData1;
-            self.me.meData.blockedTagsInline = '';
-            for (var i = 0; i < self.me.meData.blockedTags.length; i++) {
-                var tagName = self.me.meData.blockedTags[i].name.trim().toLowerCase().normalize();
-                self.me.meData.blockedTagsInline += '||' + tagName;
-            } 
-            
-            if (self.me.meData.blockedTagsInline.length > 0) self.me.meData.blockedTagsInline += '||';
-            
-            onReady(self.me.meData);
-        }
-        
-        self.me.requestController.request(query);
-            
-    },
-    
     loadTag : function(tagName, newPage, onload){
             
         var query = "", self = KellyProfileJoyreactorUnlock;
@@ -1045,10 +1170,10 @@ var KellyProfileJoyreactorUnlock = {
                     if (onload) onload(false);
                     return false;
                 }
-                
+                                        
                 var tagData = unlockedData.data['tagData1'];
                 self.tagViewer.tagData = tagData;
-                
+                                
                 self.tagViewer.tagData.pageCount = Math.ceil(tagData.postPager.count / self.tagViewer.perPage);
                 if (self.tagViewer.page > self.tagViewer.tagData.pageCount) {
                     
@@ -1066,10 +1191,22 @@ var KellyProfileJoyreactorUnlock = {
                     
                 }
                 
-                 var checkUserActions = self.handler.hostClass != 'options_page';
+                 var checkUserActions = self.handler.hostClass != 'options_page' && document.getElementById('settings');
                  var postList = document.createElement('DIV');
                      postList.id = 'post_list';
                      
+                 if (checkUserActions) {
+                    self.tagViewer.postForm = {
+                        add_post :  document.getElementById('add_post'),
+                        add_post_holder : document.getElementById('add_post_holder'),
+                        create_button : document.getElementById('showCreatePost'),
+                        holder : document.createElement('DIV'),
+                    }
+                    
+                    if (self.tagViewer.postForm['add_post_holder']) self.tagViewer.postForm['holder'].appendChild(self.tagViewer.postForm['add_post_holder']);
+                    if (self.tagViewer.postForm['create_button']) self.tagViewer.postForm['holder'].appendChild(self.tagViewer.postForm['create_button']);
+                 }
+                 
                  self.handler.getMainContainers().siteContent.innerHTML = '';
                  self.handler.getMainContainers().siteContent.appendChild(postList);
                  
@@ -1084,7 +1221,6 @@ var KellyProfileJoyreactorUnlock = {
                  
                  var tagStatsHtml = self.getTpl('tag', {
                             TAGNAME : tagName,
-                            HACTIONS : checkUserActions,
                             SYNONIMSB : tagData.synonyms ? true : false, 
                             SYNONIMS : tagData.synonyms,
                             POSTSN : tagData.postPager.count,
@@ -1093,6 +1229,8 @@ var KellyProfileJoyreactorUnlock = {
                             SUBSN : tagData.subscribers,
                             CLASSNAME : self.handler.className,
                         });
+                        
+                 var postIds = [];
                  
                  if (tagData.postPager.posts.length == 0) {
                           
@@ -1101,7 +1239,9 @@ var KellyProfileJoyreactorUnlock = {
                  } else {    
                  
                     var pageHtml = ''; var defaultUrl = self.handler.hostClass == 'options_page' ? 'https://joyreactor.cc' : '';
+                    
                     for (var i = 0; i < tagData.postPager.posts.length; i++) {
+                        
                         
                         var post = tagData.postPager.posts[i];
                         var datetime = new Date(post.createdAt);
@@ -1115,12 +1255,15 @@ var KellyProfileJoyreactorUnlock = {
                             DEFAULT_URL : defaultUrl,
                             USER_NAME : post.user.username, 
                             USER_ID : self.getNodeId(post.user.id),
-                            POST_ID : self.getNodeId(post.id),
+                            POST_ID : self.getNodeId(post.id),                            
+                            RATING : post.rating,
                             DATE : self.getFormatedDate(datetime),
                             COMMENTS_COUNT : post.commentsCount,
                             TAGS : tagsHtml,
                             TIME : KellyTools.getTime(datetime),
                         });
+                        
+                        postIds.push(self.getNodeId(post.id));
                     }
                                  
                      pageHtml = '<div class="' + self.handler.className + '-pagination ' + self.handler.className + '-tagviewer-pagination-top">\
@@ -1149,7 +1292,12 @@ var KellyProfileJoyreactorUnlock = {
                   
                  if (checkUserActions) {
                      
-                    self.tagViewer.updateTagSubscribeActionState(true);
+                    var tagInfoBlock = document.getElementsByClassName(self.handler.className + '-tagviewer-tagStats')[0];    
+                    if (tagInfoBlock) {
+                        
+                    }
+                    
+                    self.tagViewer.updateTagSubscribeActionState(true, function() {self.tagViewer.getPostsUserData(postIds)});
                     var tactions = document.getElementsByClassName(self.handler.className + '-tagviewer-taction'); 
                     
                     for (var i = 0; i < tactions.length; i++) {
@@ -1183,8 +1331,61 @@ var KellyProfileJoyreactorUnlock = {
                      for (var i = 0; i < hactions.length; i++) {
                           hactions[i].onclick = function(e) {self.tagViewer.updateHidePostsActionState(this, e);  self.tagViewer.updatePostsDisplay(); return false;}
                      }
-                 }
-                
+                     
+                     for (var i = 0; i < postIds.length; i++) {
+                         
+                         var favAction = document.querySelector('#postContainer' + postIds[i] + ' .favorite_link');
+                             favAction.onclick = function() {
+                                 
+                                    if (self.me.requestController) {
+                                        self.showCNotice('Действие уже выполняется...');
+                                        return false;
+                                    }
+                                    
+                                    var el = this;
+                                    var newState = el.classList.contains('favorite') ? 'delete' : 'create';
+                                    
+                                    self.me.requestController = KellyTools.xmlRequest(window.location.origin + '/favorite/' + newState + '/' + this.getAttribute('post_id') + '?token=' + self.authData.token , {method : 'GET', responseType : 'text'}, function(url, response, errorStatus, errorText) {
+                                         
+                                            self.me.requestController = false;
+                                            
+                                            if (newState == 'delete') {
+                                                el.classList.remove('favorite');
+                                            } else {
+                                                el.classList.add('favorite');
+                                            }
+                                    });   
+                                    
+                                    /*
+                                    
+                                    currently api returns fail for blocked posts, old method used 
+                                    
+                                    var requestCtrl = self.getUnlockController(); 
+                                        requestCtrl.cfg = {credentials : true, maxAttempts : 1, reattemptTime : 1.4}; 
+                                        requestCtrl.request({
+                                            query : "mutation FavoriteMutation($id: ID! $requestedState: Boolean!) {favorite(id: $id, requestedState: $requestedState) { __typename }}",
+                                            variables : {id : window.btoa('Post:' + this.getAttribute('post_id')), requestedState : newState},
+                                        }); 
+                                        
+                                        requestCtrl.callback = function() {
+                                            
+                                            self.me.requestController = false;
+                                            
+                                            if (newState == false) {
+                                                el.classList.remove('favorite');
+                                            } else {
+                                                el.classList.add('favorite');
+                                            }
+                                        }
+                                        
+                                    self.me.requestController = requestCtrl;
+                                    */
+                                    e.preventDefault();
+                                    return false;
+                             }
+                     }
+                          
+                 }                
                 
                  var menuItems = self.handler.getMainContainers().menu.querySelectorAll('.submenuitem');
                  for (var i = 0; i < menuItems.length; i++) {
@@ -1229,7 +1430,7 @@ var KellyProfileJoyreactorUnlock = {
                         }
                 }
                 
-                // self.renderCopyright(postList);
+                self.renderCopyright(postList);
                 onload(unlockedData, postList);
             };
             
@@ -1307,7 +1508,8 @@ var KellyProfileJoyreactorUnlock = {
             }
         
             KellyTools.getElementByClass(container, self.handler.className + 'TagOpen').onclick = function(){
-                 var notice = KellyTools.getElementByClass(container, self.handler.className + 'TagViewerState');
+                
+                var notice = KellyTools.getElementByClass(container, self.handler.className + 'TagViewerState');
                 
                 if (self.tagViewerRequestController) {
                     notice.innerText = 'Загрузка прервана';
@@ -1365,9 +1567,119 @@ var KellyProfileJoyreactorUnlock = {
             self.tagViewerTooltip.show(true);
     },
     
+    checkTagViewerRouter : function() {
+        
+        var self = KellyProfileJoyreactorUnlock;
+        var request = new URLSearchParams(window.location.search);
+        if (request.get('kellyrequest') == 'censored') {
+            
+           KellyTools.getBrowser().runtime.sendMessage({method: "getCensoredTabUrl"}, function(response) {
+                
+                if (response.url) {
+                    
+                    var urlParts = response.url.split('?')[0].split('/tag')[1];
+                        urlParts = urlParts.split('/');
+                    
+                    var tagData = {
+                         name : urlParts[1],
+                         type : 'GOOD',
+                         page : 1,
+                    };
+                    
+                    var fitUnknown = function(part, tagData) {
+                        
+                        if (!part) return;
+                        
+                        if (part && ['ALL', 'NEW', 'BEST', 'GOOD'].indexOf(part.toUpperCase()) != -1) {
+                            tagData.type = part.toUpperCase();
+                        } else {
+                            part = parseInt(part);
+                            if (Number.isInteger(part) && part >= 1) {
+                                tagData.page = part;
+                            }
+                        }
+                    }
+                                                            
+                    if (urlParts.length >= 3) fitUnknown(urlParts[2], tagData);
+                    if (urlParts.length >= 4) fitUnknown(urlParts[3], tagData);
+                    
+                    if (tagData.name) {
+                        tagData.name = decodeURIComponent(tagData.name).replace(/[ +]/gim, ' ');
+                    }
+                                        
+                    KellyTools.log('blockedTag Data :  ', KellyTools.E_NOTICE);
+                    KellyTools.log(tagData, KellyTools.E_NOTICE);
+              
+                    self.initWorkspace(function() { 
+                        
+                        self.tagViewer.type = tagData.type;
+                        
+                        if (tagData.page > 1) {
+                            
+                            self.tagViewer.tagName = tagData.name;
+                            self.tagViewer.getTagTotalPages(function(total) {
+                                
+                                    if (total === false || total <= 0) {
+                                        total = 1;
+                                    }
+                                    
+                                    if (tagData.page >= total) {
+                                        tagData.page = total;
+                                    }
+                                    
+                                    setTimeout(function() {
+                                        
+                                        self.loadTag(tagData.name, total - tagData.page + 1, function(unlockedData, postList) {                        
+                                            self.tagViewer.afterPageLoad(unlockedData, postList);
+                                        });
+                                        
+                                    }, 400);
+                            });
+                            
+                        } else {
+                            
+                             self.loadTag(tagData.name, 1, function(unlockedData, postList) {                        
+                                self.tagViewer.afterPageLoad(unlockedData, postList);               
+                            });
+                            
+                        }
+                    });
+                    
+                    self.showCNotice('Открываю тег [<b>' + tagData.name + '</b>]');
+                    window.history.pushState({}, 'Данные из тега ' + tagData.name, response.url);
+                
+                } else {
+                    
+                    setTimeout(function() {
+                        
+                        self.showCNotice('Расширение не успело отследить страницу тега по ссылке. <br><br>Повторно перейдите в тег, чтобы запрос сработал или <a href="#" class="' + self.handler.className + '-notice-tag-action">перейдете на него вручную</a>');
+                        
+                        
+                        var tooltip = self.handler.fav.getTooltip();
+                        tooltip.updateCfg({closeButton : true, closeByBody : false});
+                        self.handler.fav.tooltipBeasy = true;
+                        tooltip.show(true);
+                        
+                        document.getElementsByClassName(self.handler.className + '-notice-tag-action')[0].onclick = function() {
+                            self.showTagViewerTooltip('', this);
+                            tooltip.show(false);
+                            return false;
+                        }
+                        
+        
+                    }, 100);
+                }
+            });
+            
+        }
+    },
+    
     initTagViewer : function() {
         
-        var self = KellyProfileJoyreactorUnlock;  
+        var self = KellyProfileJoyreactorUnlock;
+        
+        if (self.handler.hostClass != 'options_page') self.checkTagViewerRouter();
+        
         if (self.handler.hostClass != 'options_page' && !self.options.unlock.tv) return;
            
         if (!self.handler.getMainContainers().menu || self.tagViewerMenuButton) { 
@@ -1400,8 +1712,8 @@ var KellyProfileJoyreactorUnlock = {
             
         }   
         
-        KellyTools.log('initTagViewer ', KellyTools.E_NOTICE);
-        
+        KellyTools.log('initTagViewer ', KellyTools.E_NOTICE);              
+            
         if (self.handler.hostClass != 'options_page') {
             
             var optionsButton = KellyTools.getElementByClass(self.handler.getMainContainers().menu, self.handler.className + '-MainMenuItem-options');
@@ -1413,94 +1725,24 @@ var KellyProfileJoyreactorUnlock = {
             
             self.tagViewerMenuButton = self.handler.fav.addMenuButton('<div class="' + self.handler.className + '-icon ' + self.handler.className + '-icon-tag ' + self.handler.className + '-buttoncolor-dynamic"></div>', function(){}, 'TagViewer');
             self.tagViewerMenuButton.classList.add(self.handler.className + '-MainMenuItem-iconed');
+                        
+            document.addEventListener('click', function (e) {
+                if (e.target.nodeType != Node.ELEMENT_NODE) return;
+                
+                if (e.target.classList.contains('change_favorite_link') || e.target.id == 'logout' || e.target.getAttribute('value') == 'Войти') {
+                           
+                    self.options.unlock.meData = self.me.getDefaultData();
+                    self.handler.fav.save('cfg');                    
+                    
+                    KellyTools.log('reset MeData', KellyTools.E_NOTICE);
+                }
+            });
             
         } else {
             
             self.tagViewerMenuButton = self.handler.fav.addMenuButton('[#]', function(){}, 'TagViewer');
         }
-        
-        var request = new URLSearchParams(window.location.search);
-        if (request.get('kellyrequest') == 'censored') {
-            
-           KellyTools.getBrowser().runtime.sendMessage({method: "getCensoredTabUrl"}, function(response) {
                 
-                if (response.url) {
-                    
-                    var urlParts = response.url.split('?')[0].split('/tag')[1];
-                        urlParts = urlParts.split('/');
-                    
-                    var tagData = {
-                         name : urlParts[1],
-                         type : 'GOOD',
-                         page : 1,
-                    };
-                    
-                    var fitUnknown = function(part, tagData) {
-                        
-                        if (!part) return;
-                        
-                        if (part && ['ALL', 'NEW', 'BEST', 'GOOD'].indexOf(part.toUpperCase()) != -1) {
-                            tagData.type = part.toUpperCase();
-                        } else {
-                            part = parseInt(part);
-                            if (Number.isInteger(part) && part >= 1) {
-                                tagData.page = part;
-                            }
-                        }
-                    }
-                                        
-                    if (urlParts.length >= 3) fitUnknown(urlParts[2], tagData);
-                    if (urlParts.length >= 4) fitUnknown(urlParts[3], tagData);
-                    
-                    if (tagData.name) {
-                        tagData.name = decodeURIComponent(tagData.name).replace(/[ +]/gim, ' ');
-                    }
-                    
-                    console.log(tagData);
-                    
-                    self.initWorkspace(function() { 
-                        
-                        self.tagViewer.type = tagData.type;
-                        
-                        if (tagData.page > 1) {
-                            
-                            self.tagViewer.tagName = tagData.name;
-                            self.tagViewer.getTagTotalPages(function(total) {
-                                
-                                    if (total === false || total <= 0) {
-                                        total = 1;
-                                    }
-                                    
-                                    if (tagData.page >= total) {
-                                        tagData.page = total;
-                                    }
-                                    
-                                    setTimeout(function() {
-                                        
-                                        self.loadTag(tagData.name, total - tagData.page + 1, function(unlockedData, postList) {                        
-                                            self.tagViewer.afterPageLoad(unlockedData, postList);                        
-                                        });
-                                        
-                                    }, 400);
-                            });
-                            
-                        } else {
-                            
-                             self.loadTag(tagData.name, 1, function(unlockedData, postList) {                        
-                                self.tagViewer.afterPageLoad(unlockedData, postList);                        
-                            });
-                            
-                        }
-                    });
-                    
-                    self.showCNotice('Открываю тег [<b>' + tagData.name + '</b>]');
-                    window.history.pushState({}, 'Данные из тега ' + tagData.name, response.url);
-                
-                }
-            });
-            
-        }
-        
         self.tagViewerMenuButton.onclick = function() {
             self.showTagViewerTooltip();
             return false;
@@ -1527,13 +1769,23 @@ var KellyProfileJoyreactorUnlock = {
                 KellyTools.injectAddition('dispetcher', function() {
                 
                     // get auth token if user sign-in, call callback only after all data is ready
+                    // todo - can be rewriten with modern api
                     
                     KellyTools.addEventPListener(window, "message", function(e) {
+                        
                         if (e && e.data && e.data.method == 'kelly_dynaminc.getvar' && e.data.senderId == 'dynamic_dispetcher') {
-                            self.authData = {time : new Date(parseInt(e.data.varList.server_time) * 1000), token : e.data.varList.token ? KellyTools.val(e.data.varList.token, 'string') : false, userId : KellyTools.val(e.data.varList.user_id, 'int')};
+                            
+                            self.authData = {
+                                time : new Date(parseInt(e.data.varList.server_time) * 1000), 
+                                token : e.data.varList.token ? KellyTools.val(e.data.varList.token, 'string') : false, 
+                                userId : KellyTools.val(e.data.varList.user_id, 'int')
+                            };
+                            
                             if (self.authData.userId <= 0) self.authData.token = false;
+                            
                             KellyTools.removeEventPListener(window, "message", 'get_main_window_data');
                             onReady();
+                            
                             return true;
                         }
                     }, 'get_main_window_data');
@@ -1603,6 +1855,8 @@ var KellyProfileJoyreactorUnlock = {
             if (typeof data.coptions.unlock.tvAny == 'undefined') data.coptions.unlock.tvAny = false;
             if (typeof data.coptions.unlock.mreact == 'undefined') data.coptions.unlock.mreact = true;
             if (typeof data.coptions.unlock.tvHideMe == 'undefined') data.coptions.unlock.tvHideMe = false;
+            if (typeof data.coptions.unlock.tvRouting == 'undefined') data.coptions.unlock.tvRouting = true;
+            if (typeof data.coptions.unlock.meData == 'undefined') data.coptions.unlock.meData = KellyProfileJoyreactorUnlock.me.getDefaultData();
             
             KellyProfileJoyreactorUnlock.options = data.coptions;
         }
@@ -1615,6 +1869,7 @@ var KellyProfileJoyreactorUnlock = {
             optionsManager.cfgInput['unlock_unlockCensoredCache'] = {name : 'cache', parent : 'unlock', loc : 'unlock_censored_cache', type : 'bool', default : true};
             // optionsManager.cfgInput['unlock_unlockCensoredUnsafe'] = {name : 'unsafe', parent : 'unlock', loc : 'unlock_censored_unsafe', notice : 'unlock_censored_unsafe_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredShowTV'] = {name : 'tv', parent : 'unlock', loc : 'unlock_censored_showtv', type : 'bool', default : true};            
+            optionsManager.cfgInput['unlock_unlockCensoredShowTV_Routing'] = {name : 'tvRouting', parent : 'unlock', loc : 'unlock_censored_showtv_routing', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredShowTV_Any'] = {name : 'tvAny', parent : 'unlock', loc : 'unlock_censored_showtv_any', type : 'bool', default : false};
             // optionsManager.cfgInput['unlock_unlockCensoredAnon'] = {name : 'anon', parent : 'unlock', loc : 'unlock_censored_anon', notice : 'unlock_censored_anon_notice', type : 'bool', default : true};
             optionsManager.cfgInput['unlock_unlockCensoredAuth'] = {name : 'auth', parent : 'unlock', loc : 'unlock_censored_auth', type : 'bool', default : true};

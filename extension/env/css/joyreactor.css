@@ -31,6 +31,10 @@
     pointer-events : none;
 }
 
+.__BASECLASS__-tagviewer-tagStats #add_post {
+    margin-top : 16px;
+}
+
 .__BASECLASS__-tagviewer-tagStats.__BASECLASS__-tagviewer-tagStats-login-active #blogFavroiteLinks,
 .__BASECLASS__-tagviewer-tagStats.__BASECLASS__-tagviewer-tagStats-login-active .__BASECLASS__-tagviewer-haction  {
     opacity : 1;
