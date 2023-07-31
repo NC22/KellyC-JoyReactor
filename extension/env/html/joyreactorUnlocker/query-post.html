@@ -4,6 +4,7 @@
     text,
     createdAt,
     commentsCount,
+    nsfw,
     user {
         id, username
     },
@@ -12,6 +13,6 @@
     },
     attributes {
         ... on AttributeEmbed {id, type, value, image { type }} 
-        ... on AttributePicture {id, type, image { type, width, height }}
+        ... on AttributePicture {id, type, image { type, hasVideo, width, height }}
     }
 }

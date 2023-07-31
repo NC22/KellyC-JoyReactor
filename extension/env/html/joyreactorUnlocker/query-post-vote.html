@@ -1,5 +1,9 @@
 ... on Post {
     id,
-    vote {createdAt},
+    createdAt,
+    user {
+        id, username
+    },
+    vote {createdAt, power},
     favorite,
 }

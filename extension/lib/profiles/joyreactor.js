@@ -167,7 +167,7 @@ function KellyProfileJoyreactor() {
             return false;
         },
         
-        /* after init worktop */
+        /* calls after init worktop, overloaded in joyreactorDownloader.js */
         
         onExtensionReady : function() {
             
@@ -763,7 +763,7 @@ function KellyProfileJoyreactor() {
     // return false if not supported for page \ site
     
     this.getFavPageInfo = function() {
- 
+        
         var info = {
             pages : 1,
             items : 0,
@@ -774,11 +774,23 @@ function KellyProfileJoyreactor() {
             censoredNum : 0,
         }      
         
-             if (handler.location.href.indexOf('/tag/') != -1) info.route = 'tag';            
-        else if (handler.location.href.indexOf('/favorite') != -1) info.route = 'favorite';   
-        else if (handler.location.href.indexOf('/search') != -1) info.route = 'search';        
-        else if (document.getElementById('tagArticle')) info.route = 'fandom';
-        else return false;
+        if (handler.unlockManager && handler.unlockManager.tagViewer.tagName && handler.unlockManager.tagViewer.tagData) {
+            
+            info.pages = handler.unlockManager.tagViewer.tagData.pageCount;
+            info.url = handler.unlockManager.tagViewer.getCurrentUrl();
+            info.items = handler.unlockManager.tagViewer.tagData.postPager.count;
+            info.route = 'tag';
+            info.contentName = handler.unlockManager.tagViewer.tagName;
+            
+        }
+        
+        if (info.route === false) {
+                 if (handler.location.href.indexOf('/tag/') != -1) info.route = 'tag';            
+            else if (handler.location.href.indexOf('/favorite') != -1) info.route = 'favorite';   
+            else if (handler.location.href.indexOf('/search') != -1) info.route = 'search';        
+            else if (document.getElementById('tagArticle')) info.route = 'fandom';
+            else return false;
+        }
         
         if (info.route == 'fandom' || info.route == 'tag') {
                         
@@ -792,44 +804,49 @@ function KellyProfileJoyreactor() {
         }
 
         if (!insertAfterEl) return false;
-        
+                
         if (info.contentImg) info.contentImg = info.contentImg.src;
         
-        var pagination = document.getElementById('Pagination')
-        if (!pagination) pagination = KellyTools.getElementByClass(document, 'pagination_expanded');
-        if (!pagination) pagination = KellyTools.getElementByClass(document, 'm_pagination'); 
+        if (info.url === false) {
             
-        var getPaginationUrlInfo = function(url) {
-            var url = url.split('?');
-            var urlParts = url[0].split('/');
-            if (urlParts.length - 1 >= 2) {
-                return {
-                    contentName : decodeURIComponent(urlParts[urlParts.length-2]).replace(/[_ +.-]/gim, '_').replace(/[^а-яА-Яa-z0-9_]/gim, ""),
-                    number : KellyTools.val(urlParts[urlParts.length-1], 'int'), 
-                    tpl : url[0].substr(0, url[0].lastIndexOf('/')) + '/__PAGENUMBER__' + (url.length > 1 ? '?' + url[1] : '')
-                };
-            } else return false;
-        }
-                           
-        if (pagination) { 
-            var current = pagination.getElementsByClassName('current');            
-            if (current.length > 0) info.pages = KellyTools.val(current[current.length-1].innerHTML, 'int');
-                          
-            var pages = pagination.getElementsByTagName('A');
-            for (var i = 0; i < pages.length; i++) {
-                var pageUrlInfo = getPaginationUrlInfo(pages[i].href);
-                if (info.url === false && pageUrlInfo) {
-                    info.url = pageUrlInfo.tpl;
-                    info.contentName = pageUrlInfo.contentName;
-                }
-                if (info.pages < pageUrlInfo.number) info.pages = pageUrlInfo.number;
+            var pagination = document.getElementById('Pagination')
+            if (!pagination) pagination = KellyTools.getElementByClass(document, 'pagination_expanded');
+            if (!pagination) pagination = KellyTools.getElementByClass(document, 'm_pagination'); 
+                
+            var getPaginationUrlInfo = function(url) {
+                var url = url.split('?');
+                var urlParts = url[0].split('/');
+                if (urlParts.length - 1 >= 2) {
+                    return {
+                        contentName : decodeURIComponent(urlParts[urlParts.length-2]).replace(/[_ +.-]/gim, '_').replace(/[^а-яА-Яa-z0-9_]/gim, ""),
+                        number : KellyTools.val(urlParts[urlParts.length-1], 'int'), 
+                        tpl : url[0].substr(0, url[0].lastIndexOf('/')) + '/__PAGENUMBER__' + (url.length > 1 ? '?' + url[1] : '')
+                    };
+                } else return false;
             }
+                               
+            if (pagination) { 
+                var current = pagination.getElementsByClassName('current');            
+                if (current.length > 0) info.pages = KellyTools.val(current[current.length-1].innerHTML, 'int');
+                              
+                var pages = pagination.getElementsByTagName('A');
+                for (var i = 0; i < pages.length; i++) {
+                    var pageUrlInfo = getPaginationUrlInfo(pages[i].href);
+                    if (info.url === false && pageUrlInfo) {
+                        info.url = pageUrlInfo.tpl;
+                        info.contentName = pageUrlInfo.contentName;
+                    }
+                    if (info.pages < pageUrlInfo.number) info.pages = pageUrlInfo.number;
+                }
+            }
+            
+            // console.log(pageUrlInfo);
+            if (info.url === false) info.url = handler.location.href;
+            
+            info.items = info.pages * 10;
         }
         
-        console.log(pageUrlInfo);
-        if (info.url === false) info.url = handler.location.href;
-        
-        info.items = info.pages * 10;       
+        // console.log(source + ' --- ' + JSON.stringify(info));
         info.container = KellyTools.getElementByClass(document, handler.className + '-exporter-wrap'); 
         
         if (!info.container) {        

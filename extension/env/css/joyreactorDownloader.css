@@ -124,6 +124,21 @@
     margin-top: 16px;
 }    
 
+@media (max-width: 1040px) {
+    
+    .__BASECLASS__-tagviewer-pagerType {
+        display: block;
+        width: 100%;
+        /* clear: both; */
+        margin-bottom: 10px;
+    }
+
+    .__BASECLASS__-tagviewer-pagerType a {
+        width: 100%;
+    }
+
+}
+
 #post_list {
     max-width: 811px;
 }
