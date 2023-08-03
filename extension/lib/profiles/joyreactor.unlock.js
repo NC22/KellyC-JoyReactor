@@ -1,5 +1,6 @@
 var KellyProfileJoyreactorUnlock = {
     
+    // updatePostsDisplay - only nsfw \ only sfw \ nsfw+sfw \ mark banned tags
     // this.handler = env profile object
     
     postMaxHeight : 2000, cacheLimit : 400, cacheDataVersion : 2, cacheCleanUpN : 100, cacheItemMaxSizeKb : 15, ratingUnhideAfterHours : 92, ratingMaxVoteHours : 92, commentMaxDeleteMinutes : 10, // unhide rating for comments older > 24 hour
@@ -178,9 +179,9 @@ var KellyProfileJoyreactorUnlock = {
                             
                             var vote = false;
                             if (postData.vote) {
-                                vote = KellyTools.val(postData.power, 'float') < 0 ? -1 : 1;
+                                vote = KellyTools.val(postData.vote.power, 'float') < 0 ? -1 : 1;
                             }
-                            
+                                                        
                             KellyTools.setHTMLData(postRatingBlock, self.getVoteForm(
                                 'post-form-vote', 
                                 ids[i], 
@@ -1033,7 +1034,7 @@ var KellyProfileJoyreactorUnlock = {
                 if (success) {
                     self.handler.formatPostContainer(unlockData.postBlock);
                     if (!forceData) {
-                        // self.renderCopyright(unlockData.postBlock);
+                        self.renderCopyright(unlockData.postBlock);
                     }
                 }
                 
@@ -1095,7 +1096,7 @@ var KellyProfileJoyreactorUnlock = {
                         delete self.unlockPool.pool[postId];
                         
                         self.handler.formatPostContainer(postBlock);
-                        // self.renderCopyright(postBlock);
+                        self.renderCopyright(postBlock);
                         
                         KellyTools.log('Unlock : restore from cache ' + postId, KellyTools.E_NOTICE);                       
                         
@@ -1180,7 +1181,7 @@ var KellyProfileJoyreactorUnlock = {
         
         } else {
             
-            var title = 'разблокировано через расширение <b>KellyC</b> <' + self.copyrightBN + 'tk>Сказать спасибо</' +self.copyrightBN + 'tk>';
+            var title = '<' + self.copyrightBN + 'tk>KellyC</' +self.copyrightBN + 'tk>';
         
             if (window.location.host.indexOf('old.') != -1) {
                 
@@ -1223,7 +1224,7 @@ var KellyProfileJoyreactorUnlock = {
                     margin-left: 7px;\
                     font-weight: bold;\
                     text-decoration: none;\
-                    background: #ff87074f;\
+                    background: #dddddd4f;\
                     padding: 4px;\
                     border-radius: 4px;\
                     cursor: pointer;\
@@ -1235,9 +1236,10 @@ var KellyProfileJoyreactorUnlock = {
         }
         
         KellyTools.setHTMLData(holder, title);
-        // holder.getElementsByTagName(self.copyrightBN + 'tk')[0].onclick = function() {
-        //    KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : 'https://nradiowave.ru/webdev'}, function(request) {}); // /''/env/html/' + self.handler.profile + 'Downloader.html?tab=donate
-        // }
+        var aboutBtn = holder.getElementsByTagName(self.copyrightBN + 'tk')[0];
+        if (aboutBtn) aboutBtn.onclick = function() {
+            KellyTools.getBrowser().runtime.sendMessage({method: "openTab", url : 'https://nradiowave.ru/webdev'}, function(request) {}); // /''/env/html/' + self.handler.profile + 'Downloader.html?tab=donate
+        }
         
     },
     
@@ -1868,21 +1870,22 @@ var KellyProfileJoyreactorUnlock = {
             document.addEventListener('click', function (e) {
                 if (e.target.nodeType != Node.ELEMENT_NODE) return;
                 
-                if (self.options.unlock.cache && (e.target.classList.contains('vote-plus') || e.target.classList.contains('vote-minus')) ) {
+                if (self.options.unlock.cache && e.target.classList.contains('vote-change')) {
                     
-                    KellyTools.log('remove post attemt ', KellyTools.E_NOTICE);
                     var postBlock = KellyTools.getParentByClass(e.target, 'postContainer');
                     var postId = postBlock.id.match(/[0-9]+/g);
-                    var cacheIndex = self.options.unlock.cacheData.ids.indexOf(postId);
+                    if (postId & postId.length > 0) postId = postId[0];
+                    
+                    var cacheIndex = self.options.unlock.cacheData.ids.indexOf(postId); // todo cant find some ids because of not int, change store format
+                    
+                    if (cacheIndex != -1) {
                         
-                    if (cahcheIndex != -1) {
-                        
-                        self.options.unlock.cacheData.data.splice(cahcheIndex, 1);
-                        self.options.unlock.cacheData.ids.splice(cahcheIndex, 1);
+                        KellyTools.log('remove post cacheIndex', KellyTools.E_NOTICE);
+                        self.options.unlock.cacheData.data.splice(cacheIndex, 1);
+                        self.options.unlock.cacheData.ids.splice(cacheIndex, 1);
                         
                         self.handler.fav.save('cfg');
                         
-                        KellyTools.log('remove post cache index ' + cahcheIndex, KellyTools.E_NOTICE);
                     }
                 }
                 
