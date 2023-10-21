@@ -1957,29 +1957,69 @@ var KellyProfileJoyreactorUnlock = {
                     
                     KellyTools.addEventPListener(document, "click", function(e) {
                         
-                        if (self.initState == 'loaded' && e && e.target && e.target.tagName == 'INPUT' && e.target.classList.contains('post_comment_form_unlocked') && !self.authData.postRequest && !self.unlockPool.requestController && self.authData.token ) {
+                        if (self.initState == 'loaded' && e && e.target && e.target.tagName == 'INPUT' && e.target.classList.contains('post_comment_form_unlocked') && !self.authData.postRequest && !self.unlockPool.requestController && self.authData.userId ) {
                             
                             var postForm = KellyTools.getParentByTag(e.target, 'form');
                             var postId = KellyTools.getElementByClass(postForm, 'post_id').value;
                             var postData = {postId : postId, postBlock : document.getElementById('postContainer' + postId), commentsBlock : KellyTools.getElementByClass(document.getElementById('postContainer' + postId), 'post_comment_list'), onReady : function() {self.showCNotice();}};
-
-                            self.authData.postRequest = KellyTools.xmlRequest(postForm.action, {method : 'POST', responseType : 'json', formData : new FormData(postForm)}, function(url, response, errorStatus, errorText) {
-                               
+                            
+                            var resultQuery = {"query":"mutation CommentFormMutation($id: ID!, $text: String!, $files: [Upload!]) {   comment (id: $id, text: $text, files: $files ) {       comment {           id       }   }}","variables":{"text":"","id":""}};
+                                resultQuery.variables.id = window.btoa('Post:' + postId);
+                                resultQuery.variables.text = postForm.getElementsByTagName('TEXTAREA')[0].value;
+                            
+                            var formImgFromUrl = postForm.querySelector('[name=comment_picture_url]');
+                            if (formImgFromUrl) {
+                                var location = KellyTools.getLocationFromUrl(formImgFromUrl.value);
+                                if (location.href && location.href.indexOf('https://default.default/') == -1) resultQuery.variables.text += '<img src=\"' + location.href + '\" />';
+                            }
+                            
+                            var formData = new FormData();
+                                formData.append("operations", JSON.stringify(resultQuery));
+                                            
+                                var queryMap = {}; // for filelist
+                                
+                                var formFiles = postForm.querySelector('[name=comment_picture]');
+                                if (formFiles && formFiles.files.length > 0) {
+                                    formData.append("0", formFiles.files[0], formFiles.files[0].name);
+                                    queryMap[0] = ["variables.files.0"];
+                                }
+                                    
+                                formData.append("map", JSON.stringify(queryMap));
+                             
+                            self.showCNotice('Отправка сообщения ...');
+                                    
+                            self.authData.postRequest = KellyTools.fetchRequest('https://api.joyreactor.cc/graphql', {
+                                method : 'POST', 
+                                responseType : 'json', 
+                                cache: 'no-cache',
+                                credentials : 'include',
+                                mode: 'cors',
+                                body : formData,
+                                redirect: 'follow',
+                                headers: {
+                                  "X-Requested-With" : "XMLHttpRequest",
+                                },
+                            }, function(url, response, errorStatus, errorText) {
+                                
                                 if (response === false) {
                                     
                                     self.showCNotice('Ошибка отправки [' + errorText + ']');
                                     
-                                } else if (response.error !== 'ok') {
+                                } else if (response.errors) {
                                     
-                                    self.showCNotice(response.error);
+                                    self.showCNotice('Ошибка отправки - ' + response.errors[0].message);
                                     
                                 } else {
                                     
                                     self.showCNotice('Отправлено, обновляю комменты...');
                                     self.unlockPool.tpl = 'query-post-with-comments';
                                     self.unlockPool.pool = {};
-                                    self.unlockPool.pool[postId] = postData;                                
-                                    self.unlockPostListDelayed(false);
+                                    self.unlockPool.pool[postId] = postData;   
+                                    setTimeout(function() {
+                                        
+                                        self.unlockPostListDelayed(false);
+                                        
+                                    }, 1000);
                                 }
                                 
                                 self.authData.postRequest = false;
