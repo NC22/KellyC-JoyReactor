@@ -1973,6 +1973,7 @@ var KellyProfileJoyreactorUnlock = {
                                 if (location.href && location.href.indexOf('https://default.default/') == -1) resultQuery.variables.text += '<img src=\"' + location.href + '\" />';
                             }
                             
+                            var timeout = 300;
                             var formData = new FormData();
                                 formData.append("operations", JSON.stringify(resultQuery));
                                             
@@ -1982,13 +1983,14 @@ var KellyProfileJoyreactorUnlock = {
                                 if (formFiles && formFiles.files.length > 0) {
                                     formData.append("0", formFiles.files[0], formFiles.files[0].name);
                                     queryMap[0] = ["variables.files.0"];
+                                    timeout = 1000;
                                 }
                                     
                                 formData.append("map", JSON.stringify(queryMap));
                              
                             self.showCNotice('Отправка сообщения ...');
                                     
-                            self.authData.postRequest = KellyTools.fetchRequest('https://api.joyreactor.cc/graphql', {
+                            self.authData.postRequest = KellyTools.fetchRequest('https://api.joyreactor.cc/graphql?unlocker=1', {
                                 method : 'POST', 
                                 responseType : 'json', 
                                 cache: 'no-cache',
@@ -2019,7 +2021,7 @@ var KellyProfileJoyreactorUnlock = {
                                         
                                         self.unlockPostListDelayed(false);
                                         
-                                    }, 1000);
+                                    }, timeout);
                                 }
                                 
                                 self.authData.postRequest = false;
