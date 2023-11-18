@@ -634,7 +634,9 @@ var KellyProfileJoyreactorUnlock = {
                 }
             }
             
-            if (attributeHolders) htmlContext = htmlContext.replace('&attribute_insert_' + itemN + '&', itemHtml);
+            console.log(attributeData);
+            
+            if (attributeHolders) htmlContext = htmlContext.replace('&attribute_insert_' + (attributeData.insertId ? attributeData.insertId : itemN) + '&', itemHtml);
             else html += itemHtml;            
         });
         
@@ -1961,11 +1963,19 @@ var KellyProfileJoyreactorUnlock = {
                             
                             var postForm = KellyTools.getParentByTag(e.target, 'form');
                             var postId = KellyTools.getElementByClass(postForm, 'post_id').value;
-                            var postData = {postId : postId, postBlock : document.getElementById('postContainer' + postId), commentsBlock : KellyTools.getElementByClass(document.getElementById('postContainer' + postId), 'post_comment_list'), onReady : function() {self.showCNotice();}};
+                            var comment = postForm.querySelector('[name=parent_id]');
+                            var commentId = comment && comment.value && !isNaN(parseInt(comment.value)) ? parseInt(comment.value) : 0;
                             
+                            var postData = {postId : postId, postBlock : document.getElementById('postContainer' + postId), commentsBlock : KellyTools.getElementByClass(document.getElementById('postContainer' + postId), 'post_comment_list'), onReady : function() {self.showCNotice();}};                            
                             var resultQuery = {"query":"mutation CommentFormMutation($id: ID!, $text: String!, $files: [Upload!]) {   comment (id: $id, text: $text, files: $files ) {       comment {           id       }   }}","variables":{"text":"","id":""}};
+                            
+                            if (commentId > 0) {
+                                resultQuery.variables.id = window.btoa('Comment:' + commentId);
+                            } else {
                                 resultQuery.variables.id = window.btoa('Post:' + postId);
-                                resultQuery.variables.text = postForm.getElementsByTagName('TEXTAREA')[0].value;
+                            }
+                                
+                            resultQuery.variables.text = postForm.getElementsByTagName('TEXTAREA')[0].value;
                             
                             var formImgFromUrl = postForm.querySelector('[name=comment_picture_url]');
                             if (formImgFromUrl) {

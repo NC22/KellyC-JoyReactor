@@ -12,7 +12,7 @@
         name, nsfw, seoName, id
     },
     attributes {
-        ... on AttributeEmbed {id, type, value, image { type }} 
-        ... on AttributePicture {id, type, image { type, hasVideo, width, height }}
+        ... on AttributeEmbed {id, type, insertId, value, image { type }} 
+        ... on AttributePicture {id, type, insertId, image { type, hasVideo, width, height }}
     }
 }
