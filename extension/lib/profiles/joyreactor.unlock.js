@@ -634,8 +634,6 @@ var KellyProfileJoyreactorUnlock = {
                 }
             }
             
-            console.log(attributeData);
-            
             if (attributeHolders) htmlContext = htmlContext.replace('&attribute_insert_' + (attributeData.insertId ? attributeData.insertId : itemN) + '&', itemHtml);
             else html += itemHtml;            
         });
@@ -1449,7 +1447,7 @@ var KellyProfileJoyreactorUnlock = {
                             var requestCtrl = self.getUnlockController(); 
                                 requestCtrl.cfg = {credentials : true, maxAttempts : 2, reattemptTime : 1.4}; 
                                 requestCtrl.request({
-                                    query : "mutation FavoriteTagMutation($id: ID! $requestedState: FavoriteTagState!) {favoriteTag(id: $id, requestedState: $requestedState) {  __typename }}",
+                                    query : "mutation FavoriteTagMutation($id: ID! $requestedState: UserTagState!) {favoriteTag(id: $id, requestedState: $requestedState) {  __typename }}",
                                     variables : {id : self.tagViewer.tagData.id, requestedState : this.getAttribute('data-action') == 'UNBLOCKED' ? 'UNSUBSCRIBED' : this.getAttribute('data-action')},
                                 }); 
                                 
