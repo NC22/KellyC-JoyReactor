@@ -210,6 +210,21 @@ table.__BASECLASS__-options-table input[type="submit"] {
     width : auto;
 }
 
+.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-options-table > tbody > tr > td:first-child {
+    width: 40%;
+    padding: 1px 0;
+}
+
+.__BASECLASS__-top-joyreactor-cc.__BASECLASS__-FavContainer td, 
+.__BASECLASS__-top-joyreactor-cc.__BASECLASS__-FavContainer table,
+.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-ModalBox-content td, 
+.__BASECLASS__-top-joyreactor-cc .__BASECLASS__-ModalBox-content table {
+    border: 0;
+    padding: 0;
+    background: unset;
+    overflow-x: hidden;
+}
+
 .__BASECLASS__-body-open-dropdown .ant-dropdown-placement-top {
     min-height : 162px;
 }
