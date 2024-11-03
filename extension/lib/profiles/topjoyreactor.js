@@ -271,7 +271,8 @@ var KellyProfileTopJoyreactor = new Object();
                  
             var imagesEl = content.getElementsByTagName('img');
             for (var i = 0; i < imagesEl.length; i++) {
-                 
+                
+                if (imagesEl[i].className.indexOf('ant-image') != -1) continue;
                 var imageLink = imagesEl[i].getAttribute("src");
                 
                 if (imageLink.indexOf('data:') === 0) continue;
